@@ -20,6 +20,12 @@ If the URL field is hidden, switch FPP's UI level to Developer. You can return t
 
 **No controller reboot is requested.** The installer starts only this plugin's services. FPP will show its normal **Restart FPPD** banner to register the new FPP commands; use it once when your show is idle. The installer never restarts FPPD or FPP's audio stack itself.
 
+### Updating an existing installation
+
+Use **Plugin Manager → Check for Updates → Update** on **After Show Hours Radio**, then refresh the plugin page. Keep the same installation URL. The plugin follows the existing `main` branch without a commit pin.
+
+**Version 1.1** adds the sources and Status display described below. This update's `fpp_upgrade.sh` runs after FPP pulls the code; it does not restart audio services, restart FPPD, request a reboot, change FPP files, or write your station/preset settings. FPP may display its normal disclosure review for the newly added directory hosts. No reinstall is needed.
+
 ### Moving from the original After Hours plugin
 
 1. Stop the original plugin and remove its old scheduled Start commands. Do not run both radios at once.
@@ -76,24 +82,39 @@ The page name is matched without regard to capitalization; page IDs are also acc
 
 Sources in the dropdown:
 
-- [StreamURL Christmas](https://streamurl.link/s/christmas)
-- [StreamURL Halloween](https://streamurl.link/s/halloween)
-- [StreamURL New Year](https://streamurl.link/s/new+year)
-- [Halloweenradio.net](https://halloweenradio.net/stations), including public MP3 and AAC+ options
+| Source | Choices | How it loads |
+|---|---|---|
+| [Radio Browser](https://docs.radio-browser.info/) | Christmas, Halloween, New Year / Party, custom station name or genre/tag | Small API searches, up to 25 displayed stations per page, known broken and HLS-only entries filtered |
+| [181.FM](https://www.181.fm/legacy.html) | Christmas or all stations | One published stream list shared by both views, cached six hours, displayed in pages of 25 |
+| [Internet-Radio.com](https://www.internet-radio.com/stations/christmas/) | Christmas or a genre you enter, such as jazz, oldies, country or classic rock | Reads the requested public directory page and literal player URL data without executing scripts |
+| [Halloweenradio.net](https://halloweenradio.net/stations) | Public Halloween channels, MP3 and AAC+ | Reads the published station-details page |
+| StreamURL | [Christmas](https://streamurl.link/s/christmas), [Halloween](https://streamurl.link/s/halloween), [New Year](https://streamurl.link/s/new+year) | Reads public links where access is available; existing adapter retained |
 
-Select a source and **Load stations**. Use **Save station** or **Play** on a result; Play saves the station first. A supported StreamURL station detail result has **Find stream links** to resolve that page on demand.
+Select a source and **Load stations**. For Radio Browser custom search, choose **Station name** or **Genre / tag**, enter your search and use **Search source**. For Internet-Radio.com genres, enter a genre name. Use **Save station** or **Play** on a result; Play saves the station first. **Filter these results** filters locally; **Load next page** requests only one additional page. A supported StreamURL station detail result has **Find stream links** to resolve that page on demand.
+
+The New Year / Party choice searches Radio Browser's party tag; it is a general party selection, not a promise that every station is exclusively New Year themed. A directory may legitimately have no matches. Stations and their metadata are supplied by their operators, and availability changes.
+
+The three added providers were checked against live public responses during development: Radio Browser returned Christmas/Halloween matches, 181.FM exposed 77 preferred direct streams, and Internet-Radio.com exposed 20 Christmas entries on its first page. Those are discovery results, not listening tests of every station. SomaFM's API was considered and excluded because its official API page says it is no longer available to third parties.
 
 ### Small-controller request limits
 
 - No automatic crawling, browser engine, background directory searches or opening every stream.
 - One directory/detail request at a time; at least **10 seconds** between live requests.
-- **6-hour cache**; one requested page at a time, at most 60 results per page and 10 directory pages.
+- **6-hour cache**; one requested page at a time, at most 25 results per Radio Browser/181.FM page (60 for the existing HTML adapters) and 10 displayed pages per search. Up to 128 directory cache files are retained; older cache files are evicted without touching saved stations.
 - Bounded HTTP connection/time limits and a **1.5 MB** directory response cap. Stream checks stop after a small audio sample.
 - Provider `Retry-After` is respected up to one day, shared across all StreamURL categories. Failed sources back off at least 10 minutes; clearing cache does not clear backoff.
 - No stream checks during routine UI polling. The monitor reads local playback progress about once a minute and attempts at most one recovery per check.
 - The browser polls local status every 5 seconds during radio playback and every 15 seconds when stopped; polling pauses in hidden tabs.
 
 Halloweenradio's public station-details layout was checked against the live page during development. **StreamURL returned HTTP 403 with a 2-hour Retry-After in the build environment**, so its live HTML integration could not be verified. Its adapter handles public HTML/audio links, common stream data attributes, supported station detail links and JSON-LD; it does not execute JavaScript or bypass access controls. If the site blocks the player or changes its markup, the page explains the failure and retains cached results. Bundled Christmas/Halloween starter links are explicitly marked as unverified; New Year requires live directory results or a manually entered stream.
+
+## Now Playing on FPP Status
+
+While radio is playing and FPP is **idle**, the main **Status - Player Mode** page shows a plugin-owned panel immediately below **Player Status**. It displays **Playing**, the station name, the stream's current artist/title when available, radio volume and bitrate. A Radio controls link opens this plugin when you need its controls.
+
+The panel uses FPP 10.4's existing plugin menu include and `OnSystemStatusChange` callback. It **does not edit FPP core files**, replace FPP's status JSON, change the native player label, or write show/song fields. Both the browser and the read-only summary endpoint check FPP is idle. A show, paused playlist, test, unknown status or Radio Stop hides the panel. An outstanding response is cancelled/ignored when FPP becomes busy, preventing stale radio titles from appearing over show information.
+
+Only the Status page loads these assets. Local radio summary polling runs at five-second intervals while the panel is playing, fifteen seconds while stopped, and pauses when FPP is busy or the tab is hidden. It never searches directories from the Status page. Live streams without track metadata show their station name and a live-radio label.
 
 ## FPP 10.4 audio and installation behavior
 
@@ -121,6 +142,7 @@ Run deterministic control tests with PHP CLI, PHP XML/cURL, and Python 3:
 
 ```sh
 php tests/run.php
+php tests/directories.php
 php tests/real-mpd.php /usr/bin/mpd
 ```
 

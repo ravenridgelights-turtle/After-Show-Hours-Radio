@@ -1,6 +1,6 @@
 <div id="ash-radio" data-api="/api/plugin/After-Show-Hours-Radio/">
   <header class="ash-heading">
-    <div><p class="ash-eyebrow">FPP 10.4 · INTERNET RADIO</p><h1>After Show Hours <span>Radio</span></h1></div>
+    <div><p class="ash-eyebrow">FPP 10.4 · RADIO 1.1</p><h1>After Show Hours <span>Radio</span></h1></div>
     <span class="ash-chip" id="ash-service">Connecting</span>
   </header>
   <div id="ash-notice" role="status" aria-live="polite" hidden></div>
@@ -49,8 +49,21 @@
   <section id="ash-tab-finder" class="ash-panel" hidden>
     <h2>A little less searching. A lot more radio.</h2>
     <p>Choose a directory, load its station names and stream links, then save or play a station here.</p>
-    <div class="ash-directory-controls"><label>Station source <select id="ash-source"><option value="christmas">StreamURL · Christmas</option><option value="halloween">StreamURL · Halloween</option><option value="newyear">StreamURL · New Year</option><option value="halloweenradio">Halloweenradio.net</option></select></label><button type="button" class="ash-primary" id="ash-directory-load">Load stations</button><button type="button" id="ash-directory-refresh">Refresh source</button></div>
-    <p class="ash-hint">One page at a time. Results stay cached for 6 hours; requests are at least 10 seconds apart. No background crawling or checks of every station.</p>
+    <div class="ash-directory-controls"><label>Station source <select id="ash-source">
+      <optgroup label="Radio Browser">
+        <option value="radiobrowser-christmas">Radio Browser · Christmas</option><option value="radiobrowser-halloween">Radio Browser · Halloween</option><option value="radiobrowser-newyear">Radio Browser · New Year / Party</option><option value="radiobrowser-search">Radio Browser · Search stations or genres</option>
+      </optgroup>
+      <optgroup label="181.FM"><option value="181fm-christmas">181.FM · Christmas</option><option value="181fm-all">181.FM · All stations</option></optgroup>
+      <optgroup label="Internet-Radio.com"><option value="internet-radio-christmas">Internet-Radio.com · Christmas</option><option value="internet-radio-genre">Internet-Radio.com · Browse a genre</option></optgroup>
+      <optgroup label="Halloweenradio.net"><option value="halloweenradio">Halloweenradio.net</option></optgroup>
+      <optgroup label="StreamURL"><option value="christmas">StreamURL · Christmas</option><option value="halloween">StreamURL · Halloween</option><option value="newyear">StreamURL · New Year</option></optgroup>
+    </select></label><button type="button" class="ash-primary" id="ash-directory-load">Load stations</button><button type="button" id="ash-directory-refresh">Refresh source</button></div>
+    <div id="ash-directory-query-controls" class="ash-directory-query-controls" hidden>
+      <label id="ash-directory-by-label">Search by <select id="ash-directory-by"><option value="name">Station name</option><option value="tag">Genre / tag</option></select></label>
+      <label><span id="ash-directory-query-label">Search</span><input id="ash-directory-query" type="search" maxlength="80" placeholder="Station name or genre"></label>
+      <button type="button" id="ash-directory-query-go">Search source</button>
+    </div>
+    <p class="ash-hint">Radio Browser and 181.FM show up to 25 stations per page. Results stay cached for 6 hours; requests are at least 10 seconds apart. No background crawling or checks of every station.</p>
     <p id="ash-directory-status" role="status"></p><input id="ash-directory-search" type="search" aria-label="Filter directory results" placeholder="Filter these results" hidden>
     <div id="ash-directory-list" class="ash-directory-grid"></div>
     <button type="button" id="ash-directory-more" hidden>Load next page</button>
@@ -70,6 +83,7 @@
         <h3>Installing alongside the old plugin</h3><p>Stop the original After Hours plugin and remove its old scheduled Start commands. Its saved internet stations are copied on first install when its settings file is present. Only run one radio at a time.</p>
         <h3>About switching &amp; Seek</h3><p>Station buttons switch the existing player without a separate Stop or an audio-service restart. Internet streams may take a moment to buffer. Seek checks a small audio sample from up to five enabled saved stations, in order; the current audio continues while it checks. Stop cancels the pending Seek.</p>
         <p>Live radio cannot rewind or fast-forward. Seek finds another saved station. Sleep stops within about a minute of the selected time. Playback does not automatically resume after a reboot.</p>
+        <h3>Now Playing on FPP Status</h3><p>The main Status page shows the radio station and current track while radio is playing and FPP is idle. It hides during shows and when radio stops. No FPP core files or native show/song status are changed.</p>
         <h3>Changed your FPP audio output?</h3><p>Reinstall this plugin from Plugin Manager to follow FPP's current PipeWire output. Your settings stay intact during Reinstall.</p>
         <p class="ash-hint">Based on Jason Cross's MIT-licensed fpp-after-hours. This edition targets FPP 10.4. StreamURL availability depends on the site's public pages and request limits.</p>
       </div>

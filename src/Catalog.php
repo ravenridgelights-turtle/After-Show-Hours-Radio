@@ -4,22 +4,19 @@ namespace AfterShow;
 final class Catalog
 {
     private $store;
-    const SOURCES=[
-        'christmas'=>['label'=>'StreamURL · Christmas','url'=>'https://streamurl.link/s/christmas'],
-        'halloween'=>['label'=>'StreamURL · Halloween','url'=>'https://streamurl.link/s/halloween'],
-        'newyear'=>['label'=>'StreamURL · New Year','url'=>'https://streamurl.link/s/new+year'],
-        'halloweenradio'=>['label'=>'Halloweenradio.net','url'=>'https://halloweenradio.net/stations']
-    ];
-    public function __construct(Store $store) { $this->store=$store; }
-    public function load($source,$refresh=false,$page=1)
+    private $fetch;
+    const SOURCES=DirectorySources::SOURCES;
+    public function __construct(Store $store,$fetch=null) { $this->store=$store;$this->fetch=$fetch ?? [Http::class,'get']; }
+    public function load($source,$refresh=false,$page=1,$query='',$searchBy='name')
     {
         if (!isset(self::SOURCES[$source])) throw new \InvalidArgumentException('Unknown station source.');
         $page=max(1,min(10,(int)$page));if ($source==='halloweenradio') $page=1;
-        return $this->store->lock('directory',function() use ($source,$refresh,$page) {
-            $limitKey=$source==='halloweenradio' ? 'halloweenradio' : 'streamurl';
-            $path=$this->store->dataDir.'/catalog-'.$source.'-'.$page.'.json';
+        $spec=DirectorySources::request($source,$page,$query,$searchBy);
+        return $this->store->lock('directory',function() use ($source,$refresh,$page,$spec) {
+            $limitKey=$spec['group'];
+            $path=$this->store->dataDir.'/catalog-'.$spec['cacheKey'].'.json';
             $cache=Store::read($path);$now=time();$warning=null;
-            if (!$refresh && $cache && $now-($cache['fetchedAt'] ?? 0)<21600) return $this->result($source,$cache,true);
+            if (!$refresh && $cache && $now-($cache['fetchedAt'] ?? 0)<21600) return $this->result($source,$cache,true,null,$page);
             $throttle=Store::read($this->store->runDir.'/directory-limits.json');
             if ($now<($throttle['sources'][$limitKey] ?? 0)) $warning='This source asked us to wait. Try again after '.date('g:i a',$throttle['sources'][$limitKey]).'.';
             elseif ($now-($throttle['last'] ?? 0)<10) $warning='Please wait 10 seconds between directory requests.';
@@ -27,8 +24,7 @@ final class Catalog
                 $throttle['last']=$now;
                 Store::write($this->store->runDir.'/directory-limits.json',$throttle);
                 try {
-                    $base=self::SOURCES[$source]['url'];$url=$base.($page>1 ? '?page='.$page : '');
-                    $r=Http::get($url,8,1572864,false,[$source==='halloweenradio' ? 'halloweenradio.net' : 'streamurl.link']);
+                    $r=call_user_func($this->fetch,$spec['url'],8,1572864,false,$spec['hosts']);
                     if ($r['status']<200 || $r['status']>=300) {
                         $retry=$r['headers']['retry-after'] ?? '600';
                         $seconds=ctype_digit($retry) ? (int)$retry : max(0,(int)strtotime($retry)-$now);
@@ -36,10 +32,16 @@ final class Catalog
                         Store::write($this->store->runDir.'/directory-limits.json',$throttle);
                         throw new \RuntimeException('Directory returned HTTP '.$r['status'].'. Saved stations still work; its retry delay will be respected.');
                     }
-                    $parsed=self::parse($r['body'],$r['url'],$source);
-                    if (!$parsed['stations']) throw new \RuntimeException('No playable links found. The site may have changed or require a browser.');
+                    switch ($spec['kind']) {
+                        case 'radiobrowser': $parsed=DirectorySources::parseRadioBrowser($r['body'],ucwords($spec['term']));break;
+                        case '181fm': $parsed=DirectorySources::parse181($r['body']);break;
+                        case 'internet-radio': $parsed=DirectorySources::parseInternetRadio($r['body'],$spec['term'],$page);break;
+                        default: $parsed=self::parse($r['body'],$r['url'],$source);
+                    }
+                    if (!$parsed['stations'] && in_array($spec['kind'],['streamurl','halloweenradio'],true)) throw new \RuntimeException('No playable links found. The site may have changed or require a browser.');
                     $cache=$parsed+['fetchedAt'=>$now,'page'=>$page];Store::write($path,$cache);
-                    return $this->result($source,$cache,false);
+                    $this->trimCache();
+                    return $this->result($source,$cache,false,null,$page);
                 } catch (\Throwable $e) {
                     $warning=$e->getMessage();
                     $throttle['sources'][$limitKey]=max($throttle['sources'][$limitKey] ?? 0,$now+600);
@@ -50,14 +52,22 @@ final class Catalog
                 $seeds=Store::read(__DIR__.'/../stations.json');
                 $cache=['stations'=>$seeds[$source] ?? [],'fetchedAt'=>0,'page'=>1,'hasMore'=>false];
             }
-            return $this->result($source,$cache ?: ['stations'=>[],'fetchedAt'=>0,'page'=>$page,'hasMore'=>false],true,$warning);
+            return $this->result($source,$cache ?: ['stations'=>[],'fetchedAt'=>0,'page'=>$page,'hasMore'=>false],true,$warning,$page);
         },0.1);
     }
-    private function result($source,$cache,$cached,$warning=null)
+    private function result($source,$cache,$cached,$warning=null,$page=1)
     {
+        if (self::SOURCES[$source]['kind']==='181fm') $cache=DirectorySources::view181($source,$cache,$page);
         return ['source'=>$source,'label'=>self::SOURCES[$source]['label'],'stations'=>$cache['stations'],
-            'cached'=>$cached,'fetchedAt'=>$cache['fetchedAt'],'bundled'=>empty($cache['fetchedAt']),
-            'page'=>$cache['page'] ?? 1,'hasMore'=>$cache['hasMore'] ?? false,'warning'=>$warning];
+            'cached'=>$cached,'fetchedAt'=>$cache['fetchedAt'],'bundled'=>empty($cache['fetchedAt']) && count($cache['stations'])>0,
+            'page'=>$cache['page'] ?? 1,'hasMore'=>($cache['hasMore'] ?? false) && ($cache['page'] ?? 1)<10,'warning'=>$warning];
+    }
+    private function trimCache()
+    {
+        $files=glob($this->store->dataDir.'/catalog-*.json');
+        if (count($files)<=128) return;
+        usort($files,function($a,$b) { return filemtime($a)<=>filemtime($b); });
+        foreach (array_slice($files,0,count($files)-128) as $file) @unlink($file);
     }
     public static function parse($html,$base,$source)
     {
@@ -122,7 +132,7 @@ final class Catalog
     }
     public function resolve($source,$url)
     {
-        if (!isset(self::SOURCES[$source]) || $source==='halloweenradio' || !Store::validUrl($url)) throw new \InvalidArgumentException('Unsupported station detail page.');
+        if (!isset(self::SOURCES[$source]) || self::SOURCES[$source]['kind']!=='streamurl' || !Store::validUrl($url)) throw new \InvalidArgumentException('Unsupported station detail page.');
         $p=parse_url($url);
         if (strtolower($p['host'])!=='streamurl.link' || !preg_match('#^/(r|radio|station|stream)/[^/]+#',$p['path'] ?? '')) throw new \InvalidArgumentException('Only StreamURL station pages can be resolved.');
         // A detail lookup uses the same global cooldown and source backoff as a directory.
@@ -134,7 +144,7 @@ final class Catalog
             if ($now<($t['sources'][$limitKey] ?? 0) || $now-($t['last'] ?? 0)<10) throw new \RuntimeException('Directory is cooling down. Wait before resolving another station.');
             $t['last']=$now;Store::write($this->store->runDir.'/directory-limits.json',$t);
             try {
-            $r=Http::get($url,8,1572864,false,['streamurl.link']);
+            $r=call_user_func($this->fetch,$url,8,1572864,false,['streamurl.link']);
             if ($r['status']<200 || $r['status']>=300) {
                 $retry=$r['headers']['retry-after'] ?? '600';$seconds=ctype_digit($retry) ? (int)$retry : max(0,(int)strtotime($retry)-$now);
                 $t['sources'][$limitKey]=$now+max(60,min(86400,$seconds));Store::write($this->store->runDir.'/directory-limits.json',$t);

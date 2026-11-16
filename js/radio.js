@@ -6,7 +6,7 @@
     const $ = id => document.getElementById('ash-' + id);
     const api = root.dataset.api;
     let snapshot, configHash = '', presetsHash = '', listHash = '', editingPresets = false;
-    let loading = false, timer, bankAction, directory = [], directorySource = '', directoryPage = 1;
+    let loading = false, timer, bankAction, directory = [], directorySource = '', directoryPage = 1, directoryIdentity = '';
     let stationBusy = false, lastSleepUntil = null, tuneBusy = false;
     const node = (tag, text, className) => {
       const el = document.createElement(tag);
@@ -197,10 +197,17 @@
       $('directory-load').disabled = $('directory-refresh').disabled = true;
       $('directory-status').textContent = 'Loading one directory page…';
       try {
-        const source = $('source').value; const page = more && source === directorySource ? directoryPage + 1 : 1;
-        const data = await request('directory', {source, refresh:force, page});
-        directory = more ? directory.concat(data.stations) : data.stations; directorySource = source; directoryPage = page;
-        $('directory-status').textContent = [data.warning, data.bundled ? 'Showing bundled starter links; live availability has not been checked.' : `${data.cached ? 'Cached' : 'Updated'} ${new Date(data.fetchedAt*1000).toLocaleString()}.`, `${directory.length} links loaded.`].filter(Boolean).join(' ');
+        const source = $('source').value;
+        const query = ['radiobrowser-search','internet-radio-genre'].includes(source) ? $('directory-query').value.trim() : '';
+        const searchBy = $('directory-by').value; const identity = JSON.stringify([source,query,searchBy]);
+        const append = more && identity === directoryIdentity; const page = append ? directoryPage + 1 : 1;
+        const data = await request('directory', {source, refresh:force, page,query,searchBy});
+        const currentQuery = ['radiobrowser-search','internet-radio-genre'].includes($('source').value) ? $('directory-query').value.trim() : '';
+        if ($('source').value!==source || currentQuery!==query || $('directory-by').value!==searchBy) return;
+        const all = append ? directory.concat(data.stations) : data.stations;
+        directory = [...new Map(all.map(station => [station.url,station])).values()];
+        directorySource = source; directoryPage = data.page; directoryIdentity = identity;
+        $('directory-status').textContent = [data.warning, data.bundled ? 'Showing bundled starter links; live availability has not been checked.' : data.fetchedAt ? `${data.cached ? 'Cached' : 'Updated'} ${new Date(data.fetchedAt*1000).toLocaleString()}.` : 'No cached results for this source.', `${directory.length} links loaded.`].filter(Boolean).join(' ');
         $('directory-more').hidden = !data.hasMore; $('directory-search').hidden = false; renderDirectory();
       } catch (e) { $('directory-status').textContent = e.message; }
       finally { stationBusy = false; $('directory-load').disabled = $('directory-refresh').disabled = false; }
@@ -208,9 +215,11 @@
     function renderDirectory() {
       const query = $('directory-search').value.toLowerCase(); const cards = [];
       directory.forEach((s, index) => {
-        if (query && !`${s.name} ${s.url}`.toLowerCase().includes(query)) return;
+        if (query && !`${s.name} ${s.url} ${s.country || ''} ${s.codec || ''}`.toLowerCase().includes(query)) return;
         const card = node('div', undefined, 'ash-directory-card');const url = node('span', s.url, 'ash-url');url.title=s.url;
         card.append(node('strong', s.name), url);
+        const meta = [s.country,s.codec,s.bitrate ? s.bitrate+' kbps' : ''].filter(Boolean).join(' · ');
+        if (meta) card.append(node('span',meta,'ash-meta'));
         const actions = node('div', undefined, 'ash-toolbar');
         if (s.detail) actions.append(button('Find stream links', async event => {
           const b=event.currentTarget; b.disabled=true;
@@ -267,6 +276,17 @@
     $('settings-form').addEventListener('submit',async e=>{
       e.preventDefault();try{await mutation('settings',{protectShow:$('protect').checked,autoRecover:$('recover').checked,defaultVolume:Number($('default-volume').value)},'Preferences saved.');}catch(err){notice(err.message,true);}
     });
+    function updateSourceControls() {
+      const source=$('source').value; const custom=['radiobrowser-search','internet-radio-genre'].includes(source);
+      $('directory-query-controls').hidden=!custom; $('directory-by-label').hidden=source!=='radiobrowser-search';
+      $('directory-query-label').textContent=source==='internet-radio-genre' ? 'Genre' : 'Search';
+      $('directory-query').placeholder=source==='internet-radio-genre' ? 'jazz, oldies, country, classic rock…' : 'Enter a station name or genre/tag';
+      $('directory-more').hidden=true;
+    }
+    $('source').addEventListener('change',()=>{updateSourceControls();$('directory-list').replaceChildren();$('directory-search').hidden=true;$('directory-status').textContent='Choose Load stations to browse this source.';});
+    $('directory-query-go').addEventListener('click',()=>loadDirectory());
+    $('directory-query').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();loadDirectory();}});
+    updateSourceControls();
     $('directory-load').addEventListener('click',()=>loadDirectory());$('directory-refresh').addEventListener('click',()=>loadDirectory(true));$('directory-more').addEventListener('click',()=>loadDirectory(false,true));
     $('directory-search').addEventListener('input',renderDirectory);
     $('export').addEventListener('click',()=>{

@@ -31,6 +31,21 @@ final class Radio
         catch (\Throwable $e) { $status=['player'=>['state'=>'unavailable'],'song'=>[]]; $error=$e->getMessage(); }
         return ['config'=>$config, 'state'=>$state, 'audio'=>$status, 'error'=>$error];
     }
+    public function nowPlaying()
+    {
+        $inactive=['active'=>false,'pollAfter'=>15];$state=$this->store->state();
+        if (!$state['wanted'] || call_user_func($this->showCheck)!==false) return $inactive;
+        try { $status=$this->mpd->status(); } catch (\Throwable $e) { return $inactive; }
+        if (($status['player']['state'] ?? '')!=='play') return $inactive;
+        $station=null;
+        foreach ($this->store->config()['stations'] as $s) if ($s['uid']===($state['uid'] ?? null)) $station=$s;
+        if (!$station) return $inactive;
+        $song=$status['song'];$title=Store::text($song['Title'] ?? '',300);$artist=Store::text($song['Artist'] ?? '',160);
+        if ($artist && $title && stripos($title,$artist)===false) $title=$artist.' — '.$title;
+        return ['active'=>true,'pollAfter'=>5,'station'=>$station['name'],'track'=>$title,
+            'volume'=>(int)($status['player']['volume'] ?? $state['volume']),'muted'=>(bool)($state['muted'] ?? false),
+            'bitrate'=>max(0,(int)($status['player']['bitrate'] ?? 0))];
+    }
     private function tuneLocked($station, $scheduled = false)
     {
         $this->guard($scheduled);

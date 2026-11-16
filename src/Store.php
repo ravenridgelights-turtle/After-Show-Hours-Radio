@@ -72,7 +72,10 @@ final class Store
     public static function text($value, $max = 160)
     {
         if (!is_scalar($value)) throw new \InvalidArgumentException('Expected text.');
-        return substr(trim(preg_replace('/[\x00-\x1f\x7f]/u', '', (string)$value)), 0, $max);
+        $out=substr(trim(preg_replace('/[\x00-\x1f\x7f]/u', '', (string)$value)),0,$max);
+        // Keep metadata valid UTF-8 when a byte limit cuts a multibyte character.
+        while ($out!=='' && !preg_match('//u',$out)) $out=substr($out,0,-1);
+        return $out;
     }
     public function migrateLegacy($legacyFile)
     {

@@ -19,6 +19,9 @@ try {
  check(count($store->config()['banks'])===3,'three named preset pages by default');
  $radio->settings(['defaultVolume'=>55]);$radio->play($a['uid']);
  check($store->state()['volume']===55,'starting volume uses saved preference');
+ check($radio->nowPlaying()['active'] && $radio->nowPlaying()['station']==='Christmas One','Status summary exposes playing station and track while FPP is idle');
+ $busy=true;check(!$radio->nowPlaying()['active'],'Status summary hides radio during an FPP show');
+ $busy=null;check(!$radio->nowPlaying()['active'],'Status summary hides radio if FPP status is unknown');$busy=false;
  $radio->move(1);check($store->state()['uid']===$b['uid'],'Next tunes the next enabled station');
  check($store->state()['volume']===35,'station volume override applies');
  $radio->move(1);check($store->state()['uid']===$a['uid'],'Next skips disabled stations and wraps');
@@ -34,6 +37,7 @@ try {
  $probe=function($url) use($radio){$radio->stop();return true;};
  fails(function() use($radio){$radio->move(1,true);},'Stop cancels an in-flight Seek');
  check(!$store->state()['wanted'] && $mpd->status()['player']['state']==='stop','cancelled Seek cannot restart playback');
+ check(!$radio->nowPlaying()['active'],'Status summary is hidden after Radio Stop');
  $busy=true;fails(function() use($radio){$radio->play();},'manual Play respects FPP show protection');
  $radio->play($a['uid'],true);check($store->state()['wanted'],'scheduled Start works during playlist lead-out');$busy=false;
  $radio->volume(42);$radio->volume(null,true);check((int)$mpd->command('status')['volume']===0,'Mute changes only radio player volume');

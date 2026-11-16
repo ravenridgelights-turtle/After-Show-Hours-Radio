@@ -7,6 +7,7 @@ if (is_file('/opt/fpp/www/common.php')) require_once '/opt/fpp/www/common.php';
 require_once __DIR__.'/Store.php';
 require_once __DIR__.'/Mpd.php';
 require_once __DIR__.'/Http.php';
+require_once __DIR__.'/DirectorySources.php';
 require_once __DIR__.'/Catalog.php';
 require_once __DIR__.'/Radio.php';
 function store()

@@ -1,0 +1,47 @@
+<?php
+require_once __DIR__.'/../src/bootstrap.php';
+use AfterShow\{Store,DirectorySources,Catalog};
+$count=0;
+function ok($condition,$label){global $count;if(!$condition)throw new RuntimeException('FAIL '.$label);$count++;echo 'PASS '.$label."\n";}
+function rejected($fn,$label){try{$fn();}catch(Throwable $e){ok(true,$label);return;}ok(false,$label);}
+$sample=['name'=>'Holiday Fixture','url'=>'https://radio.example/direct.mp3','url_resolved'=>'https://radio.example/direct.mp3','lastcheckok'=>1,'hls'=>0,'codec'=>'MP3','country'=>'Example','bitrate'=>128];
+$rows=[$sample,$sample,array_replace($sample,['url_resolved'=>'https://radio.example/live.m3u8','hls'=>1]),array_replace($sample,['url_resolved'=>'https://radio.example/broken','lastcheckok'=>0]),array_replace($sample,['url_resolved'=>'file:///etc/passwd']),array_replace($sample,['url_resolved'=>'https://radio.example/second','name'=>'Música 🎄','codec'=>'AAC'])];
+$r=DirectorySources::parseRadioBrowser(json_encode($rows),'Christmas');
+ok(count($r['stations'])===2 && $r['stations'][1]['name']==='Música 🎄','Radio Browser names, direct URLs, deduplication, broken/HLS filtering');
+$many=[];for($i=0;$i<26;$i++)$many[]=array_replace($sample,['url_resolved'=>'https://radio.example/'.$i]);
+$r=DirectorySources::parseRadioBrowser(json_encode($many),'Christmas');ok(count($r['stations'])===25 && $r['hasMore'],'Radio Browser response and lookahead are bounded to 25 displayed stations');
+$r=DirectorySources::request('radiobrowser-search',2,'classic rock','tag');parse_str(parse_url($r['url'],PHP_URL_QUERY),$query);
+ok($query['tag']==='classic rock' && $query['offset']==25 && $query['limit']==26 && $query['hidebroken']==='true','genre search uses server paging and excludes known broken stations');
+$r=DirectorySources::request('radiobrowser-newyear',1);parse_str(parse_url($r['url'],PHP_URL_QUERY),$q);ok($q['tag']==='party','New Year / Party uses a useful party genre search');
+$r=DirectorySources::request('radiobrowser-christmas',1,'','tag');parse_str(parse_url($r['url'],PHP_URL_QUERY),$q);ok(isset($q['name']) && $q['name']==='christmas','predefined search is independent of custom search field');
+rejected(function(){DirectorySources::request('radiobrowser-search',1,'');},'empty custom search never downloads the whole database');
+rejected(function(){DirectorySources::request('internet-radio-genre',1,'../../etc/passwd');},'genre cannot escape its directory URL');
+$a=DirectorySources::request('radiobrowser-search',1,'christmas','name');$b=DirectorySources::request('radiobrowser-search',1,'halloween','name');ok($a['cacheKey']!==$b['cacheKey'],'search terms get separate caches');
+$oldies='';for($i=0;$i<30;$i++)$oldies.='<div class="legacy-row"><div class="legacy-cell">Station '.$i.'</div><div class="legacy-cell">PLS</div><div class="legacy-cell">http://listen.181fm.com/181-'.$i.'_128k.mp3</div></div>';
+$html='<div class="legacy-section"><h2>Oldies</h2>'.$oldies.'</div><div class="legacy-section"><h2>Christmas</h2><div class="legacy-row"><div class="legacy-cell">Christmas Kids</div><div class="legacy-cell">PLS</div><div class="legacy-cell">http://listen.181fm.com/181-xkids_128k.mp3<br>http://listen.181fm.com/181-xkids_64k.aac</div></div></div>';
+$parsed=DirectorySources::parse181($html);ok(count($parsed['stations'])===31,'181.FM extracts one preferred direct stream per station');
+$dir=sys_get_temp_dir().'/ash-catalog-'.bin2hex(random_bytes(4));$store=new Store($dir.'/data',$dir.'/run');
+$c=$store->config();$c['banks']['custom']=['name'=>'My untouched presets','presets'=>[12=>'existing-uid']];$store->saveConfig($c);$saved=file_get_contents($store->dataDir.'/config.json');
+$calls=0;$fetch=function($url)use(&$calls,$html){$calls++;return ['status'=>200,'body'=>$html,'headers'=>[],'url'=>$url];};$catalog=new Catalog($store,$fetch);
+$one=$catalog->load('181fm-all');$two=$catalog->load('181fm-all',false,2);$holiday=$catalog->load('181fm-christmas');
+ok($calls===1 && count($one['stations'])===25 && count($two['stations'])===6,'181.FM pages share one cached request');
+ok(count($holiday['stations'])===1 && strpos($holiday['stations'][0]['name'],'Christmas Kids')!==false,'Christmas filter includes stations beyond the first general page');
+$catalog->load('181fm-all',true);ok($calls===1,'force refresh still respects request cooldown');
+Store::write($store->runDir.'/directory-limits.json',['last'=>0]);
+$fetch=function($url)use(&$calls,$sample){$calls++;return ['status'=>200,'headers'=>[],'body'=>json_encode([$sample]),'url'=>$url];};$rb=new Catalog($store,$fetch);
+$rb->load('radiobrowser-search',false,1,'Christmas','name');$rb->load('radiobrowser-search',false,1,'Christmas','name');ok($calls===2,'Radio Browser searches reuse their six-hour cache');
+$rb->load('radiobrowser-halloween',true);ok($calls===2,'different source cannot bypass global request cooldown');
+Store::write($store->runDir.'/directory-limits.json',['last'=>0,'sources'=>['radiobrowser'=>time()+600]]);$blocked=$rb->load('radiobrowser-newyear',true);ok($calls===2 && $blocked['warning'],'Radio Browser categories share provider backoff');
+$internet='<html><h1>Christmas Radio Stations</h1><script>var stream1 = {mp3: "https://one.example/live"}; var stream2 = {mp3:"https://two.example/a\\/b"}; var stream3={mp3:"javascript:bad"};</script><table><tr><td id="play_1"></td><td><h4>One &amp; Two</h4></td></tr><tr><td><div id="jquery_jplayer_2"></div></td><td><h4>Second station</h4></td></tr><tr><td id="play_3"></td><td><h4>Rejected</h4></td></tr></table><ul class="pagination"><li><a href="/stations/christmas/page2">Next</a></li></ul></html>';
+$parsed=DirectorySources::parseInternetRadio($internet,'christmas',1);ok(count($parsed['stations'])===2 && $parsed['stations'][0]['name']==='One & Two' && $parsed['stations'][1]['url']==='https://two.example/a/b','Internet-Radio maps literal URL data to row names without executing scripts');
+ok($parsed['hasMore'],'Internet-Radio pagination follows its published next page');
+rejected(function(){DirectorySources::parseInternetRadio('<h1>Browser challenge</h1>','christmas',1);},'unexpected directory page is reported as unavailable');
+$empty=DirectorySources::parseInternetRadio('<h1>Halloween Radio Stations</h1><p>We have 0 radio stations.</p>','halloween',1);ok(!$empty['stations'],'a genuinely empty directory is valid');
+ok(preg_match('//u',Store::text(str_repeat('a',159).'🎄',160))===1,'metadata truncation preserves valid UTF-8');
+ok(file_get_contents($store->dataDir.'/config.json')===$saved,'discovery preserves existing station and preset settings exactly');
+$info=json_decode(file_get_contents(__DIR__.'/../pluginInfo.json'),true);ok($info['repoName']==='After-Show-Hours-Radio' && $info['allowUpdates']===1 && $info['versions'][0]['branch']==='main' && $info['versions'][0]['sha']==='','FPP Update continues following the same unpinned main branch');
+$source=file_get_contents(__DIR__.'/../after-show-hours-radio.php');preg_match_all('/<option value="([^"]+)">(?:Radio Browser|181.FM|Internet-Radio.com|StreamURL|Halloweenradio)/',$source,$opts);ok(count(array_diff($opts[1],array_keys(Catalog::SOURCES)))===0 && count($opts[1])===count(Catalog::SOURCES),'source dropdown matches supported adapters');
+$hook=__DIR__.'/../scripts/fpp_upgrade.sh';exec('/bin/sh '.escapeshellarg($hook),$out,$code);ok($code===0 && is_executable($hook) && file_get_contents($store->dataDir.'/config.json')===$saved,'FPP upgrade hook preserves settings and completes without a restart');
+$_SERVER['SCRIPT_NAME']='/index.php';ob_start();include __DIR__.'/../content_menu.inc';$menu=ob_get_clean();ok(strpos($menu,'assets/status.js')!==false,'Status page gets plugin-owned playback display assets through the menu hook');
+$_SERVER['SCRIPT_NAME']='/plugins.php';ob_start();include __DIR__.'/../content_menu.inc';$menu=ob_get_clean();ok(strpos($menu,'assets/status.js')===false,'other FPP pages do not load the status display');
+echo "\n$count directory/update checks passed.\n";

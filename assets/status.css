@@ -1,0 +1,7 @@
+#ash-status-radio { margin:.8rem 0 1rem;padding:1rem 1.2rem;border:1px solid var(--fpp-border,var(--bs-border-color,GrayText));border-left:4px solid var(--fpp-primary,var(--bs-primary,Highlight));border-radius:.65rem;background:var(--fpp-bg-card,var(--bs-body-bg,Canvas));color:var(--bs-body-color,CanvasText); }
+#ash-status-radio[hidden] { display:none!important; }
+#ash-status-radio .ash-status-heading { display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;font-size:.76rem; }
+#ash-status-radio .ash-status-live { color:var(--fpp-primary,var(--bs-primary,Highlight));font-weight:700; }
+#ash-status-radio .ash-status-station { margin:.55rem 0 .25rem;font-size:clamp(1.05rem,2vw,1.5rem);font-weight:700;overflow-wrap:anywhere; }
+#ash-status-radio .ash-status-track { margin:0;overflow-wrap:anywhere; }
+#ash-status-radio .ash-status-extra { margin-top:.5rem;font-size:.75rem;color:var(--fpp-text-muted,GrayText); }

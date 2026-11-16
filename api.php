@@ -4,6 +4,7 @@ function getEndpointsAfterShowHoursRadio()
 {
     return [
         ['method'=>'GET','endpoint'=>'details','callback'=>'ashradio_details'],
+        ['method'=>'GET','endpoint'=>'nowPlaying','callback'=>'ashradio_nowPlaying'],
         ['method'=>'POST','endpoint'=>'control','callback'=>'ashradio_control'],
         ['method'=>'POST','endpoint'=>'station','callback'=>'ashradio_station'],
         ['method'=>'POST','endpoint'=>'preset','callback'=>'ashradio_preset'],
@@ -36,6 +37,7 @@ function ashradio_reply($callback)
     catch (Throwable $e) { return json(['status'=>false,'error'=>$e->getMessage()]); }
 }
 function ashradio_details() { return ashradio_reply(function() { return \AfterShow\radio()->details(); }); }
+function ashradio_nowPlaying() { return ashradio_reply(function() { return \AfterShow\radio()->nowPlaying(); }); }
 function ashradio_control()
 {
     return ashradio_reply(function() {
@@ -61,6 +63,6 @@ function ashradio_bank() { return ashradio_reply(function() { return \AfterShow\
 function ashradio_order() { return ashradio_reply(function() { $in=ashradio_input();return \AfterShow\radio()->reorder($in['uids'] ?? []); }); }
 function ashradio_settings() { return ashradio_reply(function() { return \AfterShow\radio()->settings(ashradio_input()); }); }
 function ashradio_import() { return ashradio_reply(function() { return \AfterShow\radio()->import(ashradio_input()); }); }
-function ashradio_directory() { return ashradio_reply(function() { $in=ashradio_input();return (new \AfterShow\Catalog(\AfterShow\store()))->load($in['source'] ?? '',!empty($in['refresh']),$in['page'] ?? 1); }); }
+function ashradio_directory() { return ashradio_reply(function() { $in=ashradio_input();return (new \AfterShow\Catalog(\AfterShow\store()))->load($in['source'] ?? '',!empty($in['refresh']),$in['page'] ?? 1,$in['query'] ?? '',$in['searchBy'] ?? 'name'); }); }
 function ashradio_resolve() { return ashradio_reply(function() { $in=ashradio_input();return (new \AfterShow\Catalog(\AfterShow\store()))->resolve($in['source'] ?? '',$in['url'] ?? ''); }); }
 function ashradio_clearCache() { return ashradio_reply(function() { ashradio_input();return (new \AfterShow\Catalog(\AfterShow\store()))->clearCache(); }); }
