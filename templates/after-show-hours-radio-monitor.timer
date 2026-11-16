@@ -1,0 +1,11 @@
+[Unit]
+Description=Check After Show Hours Radio once a minute
+
+[Timer]
+OnBootSec=90
+OnUnitInactiveSec=60
+AccuracySec=5
+Unit=after-show-hours-radio-monitor.service
+
+[Install]
+WantedBy=timers.target

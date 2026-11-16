@@ -1,0 +1,44 @@
+[
+  {
+    "name": "After Show Hours Radio - Start",
+    "script": "start.sh",
+    "args": []
+  },
+  {
+    "name": "After Show Hours Radio - Stop",
+    "script": "stop.sh",
+    "args": []
+  },
+  {
+    "name": "After Show Hours Radio - Next Station",
+    "script": "next.sh",
+    "args": []
+  },
+  {
+    "name": "After Show Hours Radio - Previous Station",
+    "script": "previous.sh",
+    "args": []
+  },
+  {
+    "name": "After Show Hours Radio - Play Preset",
+    "script": "preset.sh",
+    "args": [
+      {
+        "name": "preset",
+        "type": "int",
+        "description": "Preset number (1-12)",
+        "min": 1,
+        "max": 12,
+        "default": 1
+      },
+      {
+        "name": "page",
+        "type": "string",
+        "description": "Preset page name (blank = selected page)",
+        "optional": true,
+        "default": "",
+        "tip": "For example Christmas or Halloween. Rename pages on the radio screen."
+      }
+    ]
+  }
+]

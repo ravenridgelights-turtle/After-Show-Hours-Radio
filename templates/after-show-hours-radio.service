@@ -1,0 +1,25 @@
+[Unit]
+Description=After Show Hours Radio player
+After=network.target after-show-hours-radio-pulse.service
+
+[Service]
+Type=simple
+User=fpp
+Group=fpp
+SupplementaryGroups=audio
+RuntimeDirectory=after-show-hours-radio
+RuntimeDirectoryMode=0770
+RuntimeDirectoryPreserve=yes
+UMask=0007
+ExecStart=/usr/bin/mpd --no-daemon /etc/after-show-hours-radio/mpd.conf
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=10
+Nice=5
+CPUWeight=20
+IOWeight=20
+StandardOutput=null
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,71 @@
+<?php
+require_once __DIR__.'/../src/bootstrap.php';
+use AfterShow\{Store,Mpd,Radio,Catalog,Http};
+$dir=$argv[1] ?? sys_get_temp_dir().'/ash-radio-tests-'.bin2hex(random_bytes(5));
+@mkdir($dir,0770,true);$history=$dir.'/commands.jsonl';
+$process=proc_open(['python3',__DIR__.'/mpd_fixture.py',$dir.'/mpd.sock',$history],[0=>['file','/dev/null','r'],1=>['file','/dev/null','w'],2=>['file','/dev/null','w']],$pipes);
+if (!is_resource($process)) throw new RuntimeException('Cannot start MPD fixture.');
+for ($n=0;$n<100 && !file_exists($dir.'/mpd.sock');$n++) usleep(10000);
+$count=0;
+function check($condition,$message) { global $count;if (!$condition) throw new RuntimeException('FAIL: '.$message);$count++;echo 'PASS '.$message."\n"; }
+function fails($callback,$message) { try{$callback();}catch(Throwable $e){check(true,$message);return;}check(false,$message); }
+try {
+ $store=new Store($dir.'/data',$dir.'/run');$store->saveConfig($store->config());$mpd=new Mpd('tcp://127.0.0.1:'.trim(file_get_contents($dir.'/mpd.sock')));
+ $busy=false;$probeCount=0;$probe=function($url) use (&$probeCount) {$probeCount++;return true;};
+ $radio=new Radio($store,$mpd,function() use (&$busy){return $busy;},function($url) use (&$probe){return $probe($url);});
+ $a=$radio->saveStation(['name'=>'Christmas One','url'=>'https://one.example/live.mp3','volume'=>null]);
+ $b=$radio->saveStation(['name'=>'Halloween Two','url'=>'https://two.example/live.aac','volume'=>35]);
+ $c=$radio->saveStation(['name'=>'Disabled Three','url'=>'https://three.example/live','enabled'=>false]);
+ check(count($store->config()['banks'])===3,'three named preset pages by default');
+ $radio->settings(['defaultVolume'=>55]);$radio->play($a['uid']);
+ check($store->state()['volume']===55,'starting volume uses saved preference');
+ $radio->move(1);check($store->state()['uid']===$b['uid'],'Next tunes the next enabled station');
+ check($store->state()['volume']===35,'station volume override applies');
+ $radio->move(1);check($store->state()['uid']===$a['uid'],'Next skips disabled stations and wraps');
+ $radio->move(-1);check($store->state()['uid']===$b['uid'],'Previous wraps in saved station order');
+ $before=file_get_contents($history);check(!in_array('stop',array_map('json_decode',explode("\n",trim($before)))),'switching never sends Stop');
+ check((int)$mpd->command('status')['playlistlength']===1,'queue stays bounded to one station');
+ $bad=$radio->saveStation(['name'=>'Rejected URL','url'=>'https://reject.example/live']);
+ fails(function() use($radio,$bad){$radio->play($bad['uid']);},'MPD rejects an invalid add');
+ check($store->state()['uid']===$b['uid'] && $mpd->status()['player']['state']==='play','failed add preserves the previous station');
+ $radio->saveStation(['uid'=>$bad['uid'],'enabled'=>false]);
+ $probe=function($url) use ($mpd,$b,&$probeCount){$probeCount++;check($mpd->status()['song']['file']===$b['url'],'old audio continues during Seek check');return true;};
+ $radio->move(1,true);check($store->state()['uid']===$a['uid'],'Seek tunes a reachable audio station');
+ $probe=function($url) use($radio){$radio->stop();return true;};
+ fails(function() use($radio){$radio->move(1,true);},'Stop cancels an in-flight Seek');
+ check(!$store->state()['wanted'] && $mpd->status()['player']['state']==='stop','cancelled Seek cannot restart playback');
+ $busy=true;fails(function() use($radio){$radio->play();},'manual Play respects FPP show protection');
+ $radio->play($a['uid'],true);check($store->state()['wanted'],'scheduled Start works during playlist lead-out');$busy=false;
+ $radio->volume(42);$radio->volume(null,true);check((int)$mpd->command('status')['volume']===0,'Mute changes only radio player volume');
+ $radio->volume(null,true);check((int)$mpd->command('status')['volume']===42,'Unmute restores previous radio volume');
+ $radio->savePreset(3,$a['uid'],'Christmas');$radio->savePreset(3,$b['uid'],'Halloween');
+ $radio->preset(3,false,'Halloween');check($store->state()['uid']===$b['uid'],'same preset number is independent on named pages');
+ $radio->bank(['action'=>'create','name'=>'New Year Party']);$new=$store->config()['activeBank'];
+ $radio->savePreset(12,$a['uid'],$new);$radio->bank(['action'=>'rename','bank'=>$new,'name'=>'Winter Nights']);
+ $radio->preset(12,true,'Winter Nights');check($store->state()['uid']===$a['uid'],'new pages can be named and used by scheduled preset');
+ fails(function() use($radio){$radio->bank(['action'=>'create','name'=>'christmas']);},'duplicate page names rejected');
+ $radio->bank(['action'=>'delete','bank'=>$new]);check(count($store->config()['banks'])===3,'removing a preset page preserves saved stations');
+ $radio->reorder([$b['uid'],$a['uid'],$c['uid'],$bad['uid']]);check($store->config()['stations'][0]['uid']===$b['uid'],'saved station order can be changed');
+ fails(function() use($radio,$a){$radio->deleteStation($a['uid']);},'playing station cannot be accidentally deleted');
+ $radio->stop();$radio->deleteStation($a['uid']);check(empty($store->config()['banks']['christmas']['presets'][3]),'deleting a station clears every preset reference');
+ $backup=$store->config();$result=$radio->import($backup);check($result['added']===0,'backup import deduplicates stream URLs');
+ $invalid=$backup;$invalid['stations'][]=['name'=>'invalid','url'=>'file:///etc/passwd'];$before=$store->config();
+ fails(function() use($radio,$invalid){$radio->import($invalid);},'invalid backup is rejected');check($store->config()===$before,'invalid import leaves settings untouched');
+ $radio->play($b['uid']);$s=$store->state();$s['sleepUntil']=time()-1;$store->saveState($s);$radio->monitor();check(!$store->state()['wanted'],'sleep timer stops radio');
+ check(!Store::validUrl("https://example.org/\nstop") && !Store::validUrl('https://user:pass@example.org/audio'),'URL credentials and command injection refused');
+ $html=file_get_contents(__DIR__.'/fixtures/halloween.html');$parsed=Catalog::parse($html,'https://halloweenradio.net/stations','halloweenradio');
+ check(count($parsed['stations'])===4 && $parsed['stations'][0]['name']==='Halloweenradio Main · MP3','Halloween station names and formats extracted');
+ $parsed=Catalog::parse(file_get_contents(__DIR__.'/fixtures/streamurl.html'),'https://streamurl.link/s/christmas','christmas');
+ check(count($parsed['stations'])===3 && $parsed['hasMore'],'directory parser handles audio attributes, details, structured data and pagination');
+ check($parsed['stations'][0]['name']==='Christmas Fixture','station names come from their enclosing card');
+ // Fresh cache returns without any internet call; source backoff uses starter links.
+ Store::write($store->dataDir.'/catalog-christmas-1.json',['stations'=>$parsed['stations'],'fetchedAt'=>time(),'page'=>1,'hasMore'=>true]);
+ $catalog=new Catalog($store);check($catalog->load('christmas')['cached'],'directory results reuse six-hour cache');
+ Store::write($store->runDir.'/directory-limits.json',['last'=>time(),'sources'=>['halloweenradio'=>time()+7200]]);
+ $fallback=$catalog->load('halloweenradio',true);check($fallback['bundled'] && count($fallback['stations'])===14 && $fallback['warning'],'blocked sources use clearly labeled bundled links and honor backoff');
+ $catalog->clearCache();check(is_file($store->runDir.'/directory-limits.json'),'clearing cache does not bypass request backoff');
+ $legacy=$dir.'/legacy.json';Store::write($legacy,['streams'=>['Example'=>['uid'=>9,'active'=>'true','url'=>'https://legacy.example/radio','volume'=>25,'priority'=>2]]]);
+ $legacyStore=new Store($dir.'/migration',$dir.'/migration-run');check($legacyStore->migrateLegacy($legacy)===1,'original plugin stations migrate without editing original config');
+ check($legacyStore->config()['stations'][0]['enabled'] && $legacyStore->migrateLegacy($legacy)===0,'migration is idempotent');
+ $radio->stop();echo "\n$count checks passed.\n";
+} finally {proc_terminate($process);proc_close($process);}

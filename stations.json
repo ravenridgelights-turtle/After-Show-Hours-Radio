@@ -1,0 +1,201 @@
+{
+  "christmas": [
+    {
+      "name": "Happy Christmas Radio",
+      "url": "https://radio1.streamserver.link/radio/8070/hcr-aac-hq",
+      "category": "Christmas",
+      "detail": false
+    },
+    {
+      "name": "Merry Christmas Radio",
+      "url": "https://radio1.streamserver.link/radio/8090/mcr-mp3",
+      "category": "Christmas",
+      "detail": false
+    },
+    {
+      "name": "Christmas FM North Pole",
+      "url": "https://streaming.live365.com/a09909_2",
+      "category": "Christmas",
+      "detail": false
+    },
+    {
+      "name": "181.FM Christmas Mix",
+      "url": "https://listen.181fm.com/181-xmix_128k.mp3",
+      "category": "Christmas",
+      "detail": false
+    }
+  ],
+  "halloween": [
+    {
+      "name": "Halloweenradio Main · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_main/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Main · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_main/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Oldies · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_oldies/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Oldies · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_oldies/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Kids · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_kids/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Kids · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_kids/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Soundtracks · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_soundtracks/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Soundtracks · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_soundtracks/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Atmosphere · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_atmosphere/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Atmosphere · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_atmosphere/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Instrumental · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_instrumental/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Instrumental · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_instrumental/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Cauldron · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_cauldron/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Cauldron · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_cauldron/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    }
+  ],
+  "newyear": [],
+  "halloweenradio": [
+    {
+      "name": "Halloweenradio Main · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_main/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Main · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_main/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Oldies · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_oldies/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Oldies · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_oldies/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Kids · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_kids/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Kids · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_kids/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Soundtracks · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_soundtracks/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Soundtracks · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_soundtracks/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Atmosphere · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_atmosphere/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Atmosphere · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_atmosphere/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Instrumental · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_instrumental/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Instrumental · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_instrumental/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Cauldron · MP3",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_cauldron/mp3?src=website",
+      "category": "Halloween",
+      "detail": false
+    },
+    {
+      "name": "Halloweenradio Cauldron · AAC+",
+      "url": "https://stream.halloweenradio.net/listen/halloween_radio_cauldron/aac?src=website",
+      "category": "Halloween",
+      "detail": false
+    }
+  ]
+}

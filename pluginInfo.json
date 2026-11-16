@@ -1,0 +1,70 @@
+{
+  "repoName": "After-Show-Hours-Radio",
+  "name": "After Show Hours Radio",
+  "author": "ravenridgelights-turtle; based on Jason Cross (jcross)",
+  "description": "A radio for FPP 10.4: direct station switching, Next/Previous, Seek and named pages of 12 presets. On request, finds names and stream links at streamurl.link and halloweenradio.net. Plays only the stream you choose.",
+  "homeURL": "https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio",
+  "srcURL": "https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio.git",
+  "bugURL": "https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio/issues",
+  "iconURL": "https://raw.githubusercontent.com/ravenridgelights-turtle/After-Show-Hours-Radio/main/icon.png",
+  "allowUpdates": 1,
+  "releaseNotesStyle": "gitHistory",
+  "versions": [
+    {
+      "minFPPVersion": "10.4",
+      "maxFPPVersion": "10.99",
+      "branch": "main",
+      "sha": "",
+      "dependencies": {
+        "packages": [
+          "mpd",
+          "pipewire-pulse",
+          "php-curl",
+          "php-xml"
+        ]
+      }
+    }
+  ],
+  "privacy": {
+    "summary": "Plays your selected radio station. Searches StreamURL and Halloweenradio only when you ask; caches results locally. No analytics.",
+    "sends": [
+      {
+        "to": "the radio stream addresses you save or select",
+        "what": "normal audio requests and small Seek checks",
+        "why": "play the selected station and skip unreachable stations",
+        "alwaysOn": false
+      },
+      {
+        "to": "https://streamurl.link",
+        "what": "requests for the selected directory or station page",
+        "why": "find station names and stream URLs when you use Find stations",
+        "alwaysOn": false
+      },
+      {
+        "to": "https://halloweenradio.net",
+        "what": "a request for the public stations page",
+        "why": "find Halloween station names and stream URLs on request",
+        "alwaysOn": false
+      }
+    ],
+    "collects": [],
+    "sensors": [],
+    "remoteAccess": "none",
+    "systemChanges": [
+      {
+        "kind": "service",
+        "what": "Adds after-show-hours-radio.service and a private Unix MPD socket; does not modify the packaged MPD service or config."
+      },
+      {
+        "kind": "service",
+        "what": "Adds after-show-hours-radio-pulse.service on FPP PipeWire, plus its isolated config under /etc/after-show-hours-radio/."
+      },
+      {
+        "kind": "service",
+        "what": "Adds after-show-hours-radio-monitor.timer and service, checking playback and the sleep timer about once a minute."
+      }
+    ],
+    "closedCode": false,
+    "other": "Stations and named preset pages are saved locally under plugindata/After-Show-Hours-Radio. The radio API uses FPP access controls; it adds no public listener. Saved streams may use HTTP. Directory providers and radio stations see your IP and normal request information. Real uninstall removes this plugin data; export a backup first. Reinstall retains settings. No reboot or FPP audio-stack restart is requested."
+  }
+}
