@@ -121,6 +121,7 @@ Run deterministic control tests with PHP CLI, PHP XML/cURL, and Python 3:
 
 ```sh
 php tests/run.php
+php tests/real-mpd.php /usr/bin/mpd
 ```
 
 Browser smoke tests require Node and Playwright:

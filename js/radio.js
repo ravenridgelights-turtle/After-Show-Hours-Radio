@@ -7,7 +7,7 @@
     const api = root.dataset.api;
     let snapshot, configHash = '', presetsHash = '', listHash = '', editingPresets = false;
     let loading = false, timer, bankAction, directory = [], directorySource = '', directoryPage = 1;
-    let stationBusy = false, lastSleepUntil = null;
+    let stationBusy = false, lastSleepUntil = null, tuneBusy = false;
     const node = (tag, text, className) => {
       const el = document.createElement(tag);
       if (text !== undefined) el.textContent = text;
@@ -59,9 +59,13 @@
     }
     async function control(action, extra = {}) {
       const isSeek = action.startsWith('seek');
+      const tuning = !['stop','volume','mute','sleep'].includes(action);
+      if (tuning && tuneBusy) return;
+      if (tuning) tuneBusy = true;
       if (isSeek) notice('Seeking… the current station keeps playing while up to five saved stations are checked.');
       try { await mutation('control', { action, ...extra }, action === 'stop' ? 'Radio stopped.' : isSeek ? 'Station found.' : ''); }
       catch (e) { notice(e.message, true); await refresh(); }
+      finally { if (tuning) tuneBusy = false; }
     }
     function currentStation() { return snapshot?.config.stations.find(s => s.uid === snapshot.state.uid); }
     function render() {

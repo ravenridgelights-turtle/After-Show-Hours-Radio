@@ -38,7 +38,7 @@ const server=http.createServer(async(req,res)=>{
  await page.waitForSelector('.ash-preset');assert.equal(await page.locator('.ash-preset').count(),12);
  await page.locator('#ash-bank-add').click();await page.locator('#ash-bank-name').fill('New Year Party');await page.locator('#ash-bank-form button[type=submit]').click();
  await page.waitForFunction(()=>document.querySelector('#ash-bank').selectedOptions[0].textContent==='New Year Party');
- await page.locator('.ash-preset').nth(11).click();await page.locator('#ash-preset-station').selectOption('two');await page.locator('#ash-preset-form button[type=submit]').click();await page.waitForSelector('#ash-preset-dialog:not([open])');
+ await page.locator('.ash-preset').nth(11).click();await page.locator('#ash-preset-station').selectOption('two');await page.locator('#ash-preset-form button[type=submit]').click();await page.waitForSelector('#ash-preset-dialog:not([open])',{state:'attached'});
  await page.locator('.ash-preset').nth(11).click();await page.waitForFunction(()=>document.querySelector('#ash-station-name').textContent==='Halloweenradio Main');
  await page.locator('[data-control=stop]').click();await page.waitForFunction(()=>document.querySelector('#ash-live').textContent==='RADIO OFF');
  await page.locator('[data-tab=finder]').click();await page.locator('#ash-directory-load').click();await page.waitForSelector('.ash-directory-card');

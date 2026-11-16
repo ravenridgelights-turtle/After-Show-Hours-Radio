@@ -14,11 +14,12 @@ jobs:
       - name: PHP and shell checks
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y php-cli php-curl php-xml
+          sudo apt-get install -y php-cli php-curl php-xml mpd
           find . -name '*.php' -print0 | xargs -0 -n1 php -l
           for f in scripts/*.sh commands/*.sh; do bash -n "$f"; done
           node --check js/radio.js
           php tests/run.php
+          php tests/real-mpd.php /usr/bin/mpd
           python3 -m json.tool pluginInfo.json >/dev/null
           python3 -m json.tool commands/descriptions.json >/dev/null
       - name: Browser checks
