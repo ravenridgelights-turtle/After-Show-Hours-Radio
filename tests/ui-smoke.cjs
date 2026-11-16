@@ -1,12 +1,27 @@
 // Run with Playwright installed: NODE_PATH=/path/to/node_modules node tests/ui-smoke.cjs
 const { chromium } = require('playwright');
 const http = require('node:http'), fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process'), { createHash } = require('node:crypto');
 const repo = path.resolve(__dirname,'..');
+const fragment = execFileSync(process.env.PHP_PATH || 'php', ['-n',path.join(repo,'after-show-hours-radio.php')], {encoding:'utf8'});
+const legacyScriptUrl='/plugin.php?plugin=After-Show-Hours-Radio&file=js/radio.js&nopage=1';
+const legacyStyleUrl='/plugin.php?plugin=After-Show-Hours-Radio&file=css/radio.css&nopage=1';
+let legacyAssetRequests=0;
 let config={stations:[{uid:'one',name:'Happy Christmas Radio',url:'https://radio.example/christmas.mp3',volume:70,enabled:true,favorite:true,category:'Christmas'},{uid:'two',name:'Halloweenradio Main',url:'https://radio.example/halloween.mp3',volume:null,enabled:true,favorite:false,category:'Halloween'}],activeBank:'christmas',banks:{christmas:{name:'Christmas',presets:{1:'one'}},halloween:{name:'Halloween',presets:{1:'two'}},everyday:{name:'Everyday',presets:{}}},settings:{defaultVolume:70,protectShow:true,autoRecover:true}};
 let state={uid:'one',wanted:false,volume:70,muted:false}, play='stop';
 const directoryRequests=[],controlRequests=[],stationRequests=[];let statusCalls=0,statusDelay=0;let radioStatus={active:true,station:'Happy Christmas Radio',track:'Artist <img src=x> — Track title',volume:70,bitrate:128};
 const fixture = () => ({status:true,data:{config,state,audio:{player:{state:play,bitrate:'128'},song:{Title:'Example artist — Example song'}},error:null}});
 const server=http.createServer(async(req,res)=>{
+ const requestUrl=new URL(req.url,'http://localhost');
+ if(requestUrl.pathname==='/legacy-cache'){
+  res.setHeader('Content-Type','text/html');
+  return res.end('<!doctype html><html><head><link rel="stylesheet" href="'+legacyStyleUrl+'"><script src="'+legacyScriptUrl+'"></script></head><body>Old plugin cache</body></html>');
+ }
+ if(req.url===legacyScriptUrl || req.url===legacyStyleUrl){
+  legacyAssetRequests++;res.setHeader('Cache-Control','public,max-age=31536000,immutable');
+  res.setHeader('Content-Type',req.url===legacyStyleUrl?'text/css':'text/javascript');
+  return res.end(req.url===legacyStyleUrl?'#ash-directory-query-controls{display:none!important}':'window.legacyRadioAssetLoaded=true;');
+ }
  if(req.url.startsWith('/api/')){
   let text='';for await(const c of req)text+=c;const data=text?JSON.parse(text):{};const endpoint=new URL(req.url,'http://localhost').pathname.split('/').pop();let result={};
   if(endpoint==='nowPlaying'){statusCalls++;const selected=new URL(req.url,'http://localhost').searchParams.get('bank');const bank=config.banks[selected]?selected:config.activeBank;const payload=JSON.stringify({status:true,data:{...radioStatus,bank,banks:Object.entries(config.banks).map(([id,page])=>({id,name:page.name})),presets:Array.from({length:12},(_,index)=>{const slot=index+1,uid=config.banks[bank].presets[slot],station=config.stations.find(s=>s.uid===uid);return {slot,assigned:!!station,current:uid===state.uid,name:station?.name||''};})}});await new Promise(resolve=>setTimeout(resolve,statusDelay));res.setHeader('Content-Type','application/json');return res.end(payload);}
@@ -34,16 +49,30 @@ const server=http.createServer(async(req,res)=>{
  }
  if(req.url==='/'){
   res.setHeader('Content-Type','text/html');
-  return res.end('<!doctype html><html lang="en" data-bs-theme="light"><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{--bs-body-bg:#f8f9fa;--bs-body-color:#212529;--fpp-bg-card:#fff;--fpp-border:#dee2e6;--fpp-primary:#0d6efd;--fpp-text-muted:#6c757d;--bs-white:#fff}html[data-bs-theme="dark"]{color-scheme:dark;--bs-body-bg:#212529;--bs-body-color:#dee2e6;--fpp-bg-card:#2c3034;--fpp-border:#495057;--fpp-text-muted:#a1a1a1}body{margin:0;background:var(--bs-body-bg);font-family:system-ui,sans-serif;color:var(--bs-body-color)}button,input,select{font:inherit}</style><link rel="stylesheet" href="/css/radio.css"><script src="/js/radio.js"></script></head><body>'+fs.readFileSync(path.join(repo,'after-show-hours-radio.php'),'utf8')+'</body></html>');
+  return res.end('<!doctype html><html lang="en" data-bs-theme="light"><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{--bs-body-bg:#f8f9fa;--bs-body-color:#212529;--fpp-bg-card:#fff;--fpp-border:#dee2e6;--fpp-primary:#0d6efd;--fpp-text-muted:#6c757d;--bs-white:#fff}html[data-bs-theme="dark"]{color-scheme:dark;--bs-body-bg:#212529;--bs-body-color:#dee2e6;--fpp-bg-card:#2c3034;--fpp-border:#495057;--fpp-text-muted:#a1a1a1}body{margin:0;background:var(--bs-body-bg);font-family:system-ui,sans-serif;color:var(--bs-body-color)}button,input,select{font:inherit}</style></head><body>'+fragment+'</body></html>');
  }
- const file=path.join(repo,req.url);res.setHeader('Content-Type',req.url.endsWith('.css')?'text/css':'text/javascript');res.end(fs.readFileSync(file));
+ const relative=requestUrl.pathname==='/plugin.php'?requestUrl.searchParams.get('file'):requestUrl.pathname.slice(1);
+ const file=path.resolve(repo,relative || '');
+ if(!file.startsWith(path.join(repo,'assets')+path.sep) || !fs.existsSync(file)){res.statusCode=404;return res.end('Not found');}
+ res.setHeader('Content-Type',file.endsWith('.css')?'text/css':'text/javascript');
+ res.setHeader('Cache-Control','public,max-age=31536000,immutable');res.end(fs.readFileSync(file));
 });
 (async()=>{
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||undefined,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
  const page=await browser.newPage({viewport:{width:1440,height:1050}}), errors=[];
- page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:'+server.address().port);
+ const origin='http://127.0.0.1:'+server.address().port, requested=[];
+ page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>requested.push(r.url()));
+ // Simulate updating in a browser that still has the old unversioned files.
+ await page.goto(origin+'/legacy-cache');assert.equal(await page.evaluate(()=>window.legacyRadioAssetLoaded),true);assert.equal(legacyAssetRequests,2);
+ const beforeUpdate=requested.length;await page.goto(origin);
  await page.waitForSelector('.ash-preset');assert.equal(await page.locator('.ash-preset').count(),12);
+ assert.equal(await page.evaluate(()=>typeof window.legacyRadioAssetLoaded),'undefined','Updated page never executes cached old UI code');
+ assert.equal(requested.slice(beforeUpdate).some(url=>url.includes('file=js/radio.js') || url.includes('file=css/radio.css')),false,'Updated page never requests old unversioned assets');
+ for(const asset of ['radio-app.js','radio-app.css']){
+  const hash=createHash('sha256').update(fs.readFileSync(path.join(repo,'assets',asset))).digest('hex').slice(0,12);
+  assert.equal(requested.some(url=>url.includes('file=assets/'+asset+'&nopage=1&ref='+hash)),true,'Updated page requests the current content hash for '+asset);
+ }
  await page.locator('#ash-bank-add').click();await page.locator('#ash-bank-name').fill('New Year Party');await page.locator('#ash-bank-form button[type=submit]').click();
  await page.waitForFunction(()=>document.querySelector('#ash-bank').selectedOptions[0].textContent==='New Year Party');
  await page.locator('.ash-preset').nth(11).click();await page.locator('#ash-preset-station').selectOption('two');await page.locator('#ash-preset-form button[type=submit]').click();await page.waitForSelector('#ash-preset-dialog:not([open])',{state:'attached'});
@@ -64,7 +93,9 @@ const server=http.createServer(async(req,res)=>{
  const savedCount=stationRequests.length;await page.locator('#ash-manual-name').fill('Everyday Jazz');await page.locator('#ash-manual-url').fill('https://station.example/jazz.mp3');await page.locator('#ash-manual-form button[value=play]').click();
  await page.waitForFunction(()=>document.querySelector('#ash-manual-feedback').textContent.includes('saved and playing'));
  assert.equal(stationRequests.length,savedCount,'Known URLs are reused for Save & play');assert.equal(controlRequests.at(-1).action,'play');
- await page.locator('#ash-source').selectOption('internet-radio-search');await page.locator('#ash-directory-query').fill('classic rock');await page.locator('#ash-directory-query-go').click();await page.waitForSelector('.ash-directory-card');
+ await page.locator('#ash-source').selectOption('internet-radio-search');assert.equal(await page.locator('#ash-directory-query').isVisible(),true,'Internet-Radio search stays visible with old assets in browser cache');
+ assert.equal(await page.locator('#ash-directory-query-label').textContent(),'Search any music or station');
+ await page.locator('#ash-directory-query').fill('classic rock');await page.locator('#ash-directory-query-go').click();await page.waitForSelector('.ash-directory-card');
  assert.equal(directoryRequests.at(-1).source,'internet-radio-search');assert.equal(directoryRequests.at(-1).query,'classic rock');
  await page.locator('[data-tab=saved]').click();
  const out=process.env.UI_SCREENSHOT_DIR||path.join('/tmp','ash-radio-ui');fs.mkdirSync(out,{recursive:true});
@@ -108,6 +139,6 @@ const server=http.createServer(async(req,res)=>{
  assert.deepEqual(await page.evaluate(()=>window.lastStatusJSON),show,'Plugin never overwrites FPP native status JSON');
  radioStatus={active:false};statusDelay=0;const stoppedResponse=page.waitForResponse(response=>response.url().includes('/nowPlaying'));await page.goto('http://127.0.0.1:'+server.address().port+'/fpp-status');await stoppedResponse;
  assert.equal(await page.locator('#ash-status-radio').isVisible(),false,'Stopped radio leaves no status display');
- assert.deepEqual(errors,[]);console.log('PASS UI: preset pages; manual URL Save/Play; everyday Internet-Radio search; Status transport and numbered presets; custom genre search and paging; idle-only Status display; show priority; stale response guard; stopped radio; light/dark desktop/mobile; no browser errors.');
+ assert.deepEqual(errors,[]);console.log('PASS UI: stale-cache update regression; preset pages; manual URL Save/Play; everyday Internet-Radio search; Status transport and numbered presets; custom genre search and paging; idle-only Status display; show priority; stale response guard; stopped radio; light/dark desktop/mobile; no browser errors.');
  await browser.close();server.close();
 })().catch(e=>{console.error(e);server.close();process.exit(1)});

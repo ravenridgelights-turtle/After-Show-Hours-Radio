@@ -1,5 +1,12 @@
 # Changes
 
+## 1.2.1 — November 16, 2026
+
+- Fixed stale browser assets after an FPP Update, which could hide Internet-Radio.com's search field despite the new source option appearing. Plugin and Status assets now use content hashes in their URLs; normal page refresh loads the current version.
+- Added a distinct amber/teal boombox icon with a new image URL so the Plugin Manager no longer reuses the original plugin's moon/music icon.
+- Added release-page installation, update and usage instructions, including named presets, station discovery, Status controls and show scheduling. Validated main-branch releases are published automatically.
+- Preserved saved stations, preset pages, schedules and the existing install/update URL. No FPP core edits, audio restart or reboot in this update.
+
 ## 1.2.0 — November 16, 2026
 
 - Added compact FPP-style Previous, Stop and Next controls to the radio panel on the main Status page.

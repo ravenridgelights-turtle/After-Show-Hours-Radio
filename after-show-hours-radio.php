@@ -1,6 +1,14 @@
+<?php
+// Keep these outside FPP's automatically loaded js/css directories. Each
+// content hash gives an updated asset a fresh URL after an in-place Update.
+$ashRadioScriptRef = substr(hash_file('sha256', __DIR__.'/assets/radio-app.js'), 0, 12);
+$ashRadioStyleRef = substr(hash_file('sha256', __DIR__.'/assets/radio-app.css'), 0, 12);
+?>
+<link rel="stylesheet" href="plugin.php?plugin=After-Show-Hours-Radio&amp;file=assets/radio-app.css&amp;nopage=1&amp;ref=<?= $ashRadioStyleRef ?>">
+<script defer src="plugin.php?plugin=After-Show-Hours-Radio&amp;file=assets/radio-app.js&amp;nopage=1&amp;ref=<?= $ashRadioScriptRef ?>"></script>
 <div id="ash-radio" data-api="/api/plugin/After-Show-Hours-Radio/">
   <header class="ash-heading">
-    <div><p class="ash-eyebrow">FPP 10.4 · RADIO 1.2</p><h1>After Show Hours <span>Radio</span></h1></div>
+    <div><p class="ash-eyebrow">FPP 10.4 · RADIO 1.2.1</p><h1>After Show Hours <span>Radio</span></h1></div>
     <span class="ash-chip" id="ash-service">Connecting</span>
   </header>
   <div id="ash-notice" role="status" aria-live="polite" hidden></div>
