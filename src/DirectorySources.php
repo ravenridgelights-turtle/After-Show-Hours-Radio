@@ -12,6 +12,7 @@ final class DirectorySources
         'radiobrowser-search'=>['label'=>'Radio Browser · Search','url'=>'https://de1.api.radio-browser.info/json/stations/search','kind'=>'radiobrowser','custom'=>true],
         '181fm-christmas'=>['label'=>'181.FM · Christmas','url'=>'https://www.181.fm/legacy.html','kind'=>'181fm'],
         '181fm-all'=>['label'=>'181.FM · All stations','url'=>'https://www.181.fm/legacy.html','kind'=>'181fm'],
+        'internet-radio-search'=>['label'=>'Internet-Radio.com · Search','url'=>'https://www.internet-radio.com/search/','kind'=>'internet-radio','custom'=>true,'search'=>true],
         'internet-radio-christmas'=>['label'=>'Internet-Radio.com · Christmas','url'=>'https://www.internet-radio.com/stations/christmas/','kind'=>'internet-radio','term'=>'christmas'],
         'internet-radio-genre'=>['label'=>'Internet-Radio.com · Browse a genre','url'=>'https://www.internet-radio.com/stations/','kind'=>'internet-radio','custom'=>true],
         'christmas'=>['label'=>'StreamURL · Christmas','url'=>'https://streamurl.link/s/christmas','kind'=>'streamurl'],
@@ -26,12 +27,14 @@ final class DirectorySources
         $term=isset($s['term']) ? $s['term'] : Store::text($query,80);
         $field=empty($s['custom']) ? ($s['field'] ?? 'name') : ($kind==='radiobrowser' && $searchBy==='tag' ? 'tag' : 'name');
         if (!empty($s['custom'])) {
-            if ($term==='') throw new \InvalidArgumentException($kind==='radiobrowser' ? 'Enter a station name or genre/tag to search.' : 'Enter a genre such as jazz, oldies, country or classic rock.');
+            if ($term==='') throw new \InvalidArgumentException($kind==='radiobrowser' || !empty($s['search']) ? 'Enter a station name or music genre to search.' : 'Enter a genre such as jazz, oldies, country or classic rock.');
             $key=$source.'-'.substr(hash('sha256',$field.'|'.strtolower($term)),0,20).'-'.$page;
         }
         if ($kind==='radiobrowser') {
             $params=['limit'=>self::PAGE_SIZE+1,'offset'=>($page-1)*self::PAGE_SIZE,'hidebroken'=>'true','order'=>'clickcount','reverse'=>'true',$field=>$term];
             $url.='?'.http_build_query($params,'','&',PHP_QUERY_RFC3986);
+        } elseif ($kind==='internet-radio' && !empty($s['search'])) {
+            $url='https://www.internet-radio.com/search/?'.http_build_query(['radio'=>$term],'','&',PHP_QUERY_RFC3986);
         } elseif ($kind==='internet-radio') {
             $term=strtolower(preg_replace('/\s+/',' ',trim($term)));
             if (!preg_match('/^[a-z0-9][a-z0-9 -]{0,39}$/',$term)) throw new \InvalidArgumentException('Use a genre name with letters, numbers, spaces or hyphens, up to 40 characters.');
@@ -86,7 +89,7 @@ final class DirectorySources
         if (!$stations) throw new \RuntimeException('181.FM did not expose its published stream list. Try another source.');
         return ['stations'=>$stations,'hasMore'=>false];
     }
-    public static function parseInternetRadio($html,$term,$page)
+    public static function parseInternetRadio($html,$term,$page,$base='https://www.internet-radio.com/')
     {
         $xp=self::document($html);$streams=[];$stations=[];$seen=[];
         // Read only literal URL data used by the page's players. Never run JavaScript.
@@ -102,13 +105,27 @@ final class DirectorySources
             if (!$url || isset($seen[$url]) || count($stations)>=60) continue;
             $seen[$url]=true;$stations[]=['name'=>Store::text($heading->textContent),'url'=>$url,'category'=>Store::text(ucwords($term)),'detail'=>false];
         }
-        $hasMore=false;
+        $nextUrl=null;
         foreach ($xp->query('//ul[contains(concat(" ",normalize-space(@class)," ")," pagination ")]//a[@href]') as $link) {
-            if (preg_match('#/page([0-9]+)$#',$link->getAttribute('href'),$m) && (int)$m[1]>$page) $hasMore=true;
+            $href=str_replace(' ','%20',$link->getAttribute('href'));$candidate=Http::absolute($href,$base);
+            if (!self::safeInternetRadioPage($candidate)) continue;
+            $n=0;
+            if (preg_match('#/page([0-9]+)$#',parse_url($candidate,PHP_URL_PATH) ?? '',$m)) $n=(int)$m[1];
+            else { parse_str(parse_url($candidate,PHP_URL_QUERY) ?? '',$q);$n=(int)($q['page'] ?? 0); }
+            if ($n===$page+1) { $nextUrl=$candidate;break; }
         }
-        // An empty real directory is valid. A JS challenge or changed layout is not.
-        if (!$stations && (!$xp->query('//h1')->length || stripos($xp->query('//h1')->item(0)->textContent,'Radio Stations')===false)) throw new \RuntimeException('Internet-Radio.com did not return a station directory. Try again later.');
-        return ['stations'=>$stations,'hasMore'=>$hasMore];
+        // Recognize directory and search-result pages, including valid empty results.
+        $h1=$xp->query('//h1')->item(0);$title=$h1 ? $h1->textContent : '';
+        if (!$stations && stripos($title,'Radio Stations')===false && stripos($title,'Radio Search Results')===false) throw new \RuntimeException('Internet-Radio.com did not return a station directory. Try again later.');
+        return ['stations'=>$stations,'hasMore'=>$nextUrl!==null,'nextUrl'=>$nextUrl];
+    }
+    public static function safeInternetRadioPage($url)
+    {
+        if (!Store::validUrl($url)) return false;
+        $parts=parse_url($url);
+        if ($parts['scheme']!=='https' || $parts['host']!=='www.internet-radio.com' || isset($parts['port'])) return false;
+        $path=$parts['path'] ?? '';
+        return (bool)preg_match('#^/stations/[a-z0-9%+ _-]{1,200}/page[0-9]{1,2}$#i',$path) || $path==='/search/';
     }
     public static function view181($source,$cache,$page)
     {

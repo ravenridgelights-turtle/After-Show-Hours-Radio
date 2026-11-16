@@ -24,7 +24,7 @@ If the URL field is hidden, switch FPP's UI level to Developer. You can return t
 
 Use **Plugin Manager → Check for Updates → Update** on **After Show Hours Radio**, then refresh the plugin page. Keep the same installation URL. The plugin follows the existing `main` branch without a commit pin.
 
-**Version 1.1** adds the sources and Status display described below. This update's `fpp_upgrade.sh` runs after FPP pulls the code; it does not restart audio services, restart FPPD, request a reboot, change FPP files, or write your station/preset settings. FPP may display its normal disclosure review for the newly added directory hosts. No reinstall is needed.
+**Version 1.2** adds compact Status transport/preset controls, manual stream entry in Find stations, and Internet-Radio.com station/music search. This update's `fpp_upgrade.sh` runs after FPP pulls the code; it does not restart audio services, restart FPPD, request a reboot, change FPP files, or write your station/preset settings. FPP may display its normal disclosure review for the newly added directory hosts. No reinstall is needed.
 
 ### Moving from the original After Hours plugin
 
@@ -86,11 +86,13 @@ Sources in the dropdown:
 |---|---|---|
 | [Radio Browser](https://docs.radio-browser.info/) | Christmas, Halloween, New Year / Party, custom station name or genre/tag | Small API searches, up to 25 displayed stations per page, known broken and HLS-only entries filtered |
 | [181.FM](https://www.181.fm/legacy.html) | Christmas or all stations | One published stream list shared by both views, cached six hours, displayed in pages of 25 |
-| [Internet-Radio.com](https://www.internet-radio.com/stations/christmas/) | Christmas or a genre you enter, such as jazz, oldies, country or classic rock | Reads the requested public directory page and literal player URL data without executing scripts |
+| [Internet-Radio.com](https://www.internet-radio.com/stations/christmas/) | Search any station/music, Christmas, or a genre such as jazz, oldies, country or classic rock | Reads the requested public directory page and literal player URL data without executing scripts |
 | [Halloweenradio.net](https://halloweenradio.net/stations) | Public Halloween channels, MP3 and AAC+ | Reads the published station-details page |
 | StreamURL | [Christmas](https://streamurl.link/s/christmas), [Halloween](https://streamurl.link/s/halloween), [New Year](https://streamurl.link/s/new+year) | Reads public links where access is available; existing adapter retained |
 
-Select a source and **Load stations**. For Radio Browser custom search, choose **Station name** or **Genre / tag**, enter your search and use **Search source**. For Internet-Radio.com genres, enter a genre name. Use **Save station** or **Play** on a result; Play saves the station first. **Filter these results** filters locally; **Load next page** requests only one additional page. A supported StreamURL station detail result has **Find stream links** to resolve that page on demand.
+Select a source and **Load stations**. For Radio Browser custom search, choose **Station name** or **Genre / tag**, enter your search and use **Search source**. For Internet-Radio.com **Search any music or station**, enter a station name or music style; this uses the site's public search form. The separate genre choice browses a genre directly. General searches include everyday music, not just holiday stations. Search pagination follows the provider's actual next-page links, including when a search redirects to a genre page. Use **Save station** or **Play** on a result; Play saves the station first. **Filter these results** filters locally; **Load next page** requests only one additional page. A supported StreamURL station detail result has **Find stream links** to resolve that page on demand.
+
+**Know the stream URL already?** In Find stations, use **Add a known station**: enter a station name and a direct HTTP(S) audio stream URL, then choose **Save station** or **Save & play**. Saving does not contact the stream; Play connects only to the selected station. An already-saved URL is reused rather than duplicated. The original Add station dialog in Saved stations is still available for category, volume and favorite settings.
 
 The New Year / Party choice searches Radio Browser's party tag; it is a general party selection, not a promise that every station is exclusively New Year themed. A directory may legitimately have no matches. Stations and their metadata are supplied by their operators, and availability changes.
 
@@ -110,11 +112,11 @@ Halloweenradio's public station-details layout was checked against the live page
 
 ## Now Playing on FPP Status
 
-While radio is playing and FPP is **idle**, the main **Status - Player Mode** page shows a plugin-owned panel immediately below **Player Status**. It displays **Playing**, the station name, the stream's current artist/title when available, radio volume and bitrate. A Radio controls link opens this plugin when you need its controls.
+While radio is playing and FPP is **idle**, the main **Status - Player Mode** page shows a plugin-owned panel immediately below **Player Status**. It displays **Playing**, the station name, the stream's current artist/title when available, radio volume and bitrate. The panel includes compact **Previous**, **Stop** and **Next** buttons using FPP's native button classes. A named preset-page selector and **1–12** numbered buttons use your existing preset assignments. Empty buttons are disabled, the current station is highlighted, and station names appear in button labels/tooltips. Changing the Status page selector is local to that browser tab; it does not change the plugin's default preset page. A Radio controls link opens the full plugin for editing presets or other settings.
 
-The panel uses FPP 10.4's existing plugin menu include and `OnSystemStatusChange` callback. It **does not edit FPP core files**, replace FPP's status JSON, change the native player label, or write show/song fields. Both the browser and the read-only summary endpoint check FPP is idle. A show, paused playlist, test, unknown status or Radio Stop hides the panel. An outstanding response is cancelled/ignored when FPP becomes busy, preventing stale radio titles from appearing over show information.
+The panel uses FPP 10.4's existing plugin menu include and `OnSystemStatusChange` callback. It **does not edit FPP core files**, replace FPP's status JSON, change the native player label, or write show/song fields. Both the browser and the read-only summary endpoint check FPP is idle. Controls use the existing radio POST API and its show-protection checks. Stop stays available while another radio control request is pending. A show, paused playlist, test, unknown status or Radio Stop hides the panel. An outstanding response is cancelled/ignored when FPP becomes busy, preventing stale radio titles from appearing over show information.
 
-Only the Status page loads these assets. Local radio summary polling runs at five-second intervals while the panel is playing, fifteen seconds while stopped, and pauses when FPP is busy or the tab is hidden. It never searches directories from the Status page. Live streams without track metadata show their station name and a live-radio label.
+Only the Status page loads these assets. The summary sends names of available preset pages and the 12 slots on the selected page, rather than every page's assignments. Local radio summary polling runs at five-second intervals while the panel is playing, fifteen seconds while stopped, and pauses when FPP is busy or the tab is hidden. It never searches directories from the Status page. Live streams without track metadata show their station name and a live-radio label.
 
 ## FPP 10.4 audio and installation behavior
 

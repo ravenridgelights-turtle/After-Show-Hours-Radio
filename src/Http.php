@@ -24,7 +24,7 @@ final class Http
                 CURLOPT_PROTOCOLS=>CURLPROTO_HTTP | CURLPROTO_HTTPS,
                 CURLOPT_CONNECTTIMEOUT_MS=>min(2000,$remaining),CURLOPT_TIMEOUT_MS=>$remaining,
                 CURLOPT_SSL_VERIFYPEER=>true,CURLOPT_SSL_VERIFYHOST=>2,
-                CURLOPT_USERAGENT=>'AfterShowHoursRadio/1.1 (+https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio)',
+                CURLOPT_USERAGENT=>'AfterShowHoursRadio/1.2 (+https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio)',
                 CURLOPT_HTTPHEADER=>['Accept: '.($probe ? 'audio/*,application/ogg,*/*;q=0.2' : 'text/html,application/json;q=0.9')],
                 CURLOPT_RESOLVE=>[$host.':'.$port.':'.(strpos($ips[0],':')!==false ? '['.$ips[0].']' : $ips[0])],
                 CURLOPT_HEADERFUNCTION=>function($ch,$line) use (&$headers) {

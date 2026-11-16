@@ -35,6 +35,15 @@ Store::write($store->runDir.'/directory-limits.json',['last'=>0,'sources'=>['rad
 $internet='<html><h1>Christmas Radio Stations</h1><script>var stream1 = {mp3: "https://one.example/live"}; var stream2 = {mp3:"https://two.example/a\\/b"}; var stream3={mp3:"javascript:bad"};</script><table><tr><td id="play_1"></td><td><h4>One &amp; Two</h4></td></tr><tr><td><div id="jquery_jplayer_2"></div></td><td><h4>Second station</h4></td></tr><tr><td id="play_3"></td><td><h4>Rejected</h4></td></tr></table><ul class="pagination"><li><a href="/stations/christmas/page2">Next</a></li></ul></html>';
 $parsed=DirectorySources::parseInternetRadio($internet,'christmas',1);ok(count($parsed['stations'])===2 && $parsed['stations'][0]['name']==='One & Two' && $parsed['stations'][1]['url']==='https://two.example/a/b','Internet-Radio maps literal URL data to row names without executing scripts');
 ok($parsed['hasMore'],'Internet-Radio pagination follows its published next page');
+$search=DirectorySources::request('internet-radio-search',1,'The Miller Lights');parse_str(parse_url($search['url'],PHP_URL_QUERY),$params);ok($params['radio']==='The Miller Lights' && parse_url($search['url'],PHP_URL_PATH)==='/search/','Internet-Radio uses the published station/name search endpoint');
+$searchHtml=str_replace(['/stations/christmas/page2','Christmas Radio Stations'],['/stations/classic rock/page2','Classic Rock Radio Stations'],$internet);
+$parsed=DirectorySources::parseInternetRadio($searchHtml,'classic rock',1,'https://www.internet-radio.com/stations/classic%20rock/');ok($parsed['nextUrl']==='https://www.internet-radio.com/stations/classic%20rock/page2','search pagination follows a redirected genre result without repeating page one');
+Store::write($store->runDir.'/directory-limits.json',['last'=>0]);$urls=[];
+$searchCatalog=new Catalog($store,function($url)use(&$urls,$searchHtml){$urls[]=$url;return ['status'=>200,'headers'=>[],'body'=>$searchHtml,'url'=>$url];});
+$searchCatalog->load('internet-radio-search',false,1,'classic rock');Store::write($store->runDir.'/directory-limits.json',['last'=>0]);$searchCatalog->load('internet-radio-search',false,2,'classic rock');
+ok(count($urls)===2 && $urls[1]==='https://www.internet-radio.com/stations/classic%20rock/page2','next search page uses the provider URL stored by the previous result');
+ok(!DirectorySources::safeInternetRadioPage('https://evil.example/stations/rock/page2') && !DirectorySources::safeInternetRadioPage('http://127.0.0.1/search/'),'search pagination cannot redirect to another host or a local service');
+
 rejected(function(){DirectorySources::parseInternetRadio('<h1>Browser challenge</h1>','christmas',1);},'unexpected directory page is reported as unavailable');
 $empty=DirectorySources::parseInternetRadio('<h1>Halloween Radio Stations</h1><p>We have 0 radio stations.</p>','halloween',1);ok(!$empty['stations'],'a genuinely empty directory is valid');
 ok(preg_match('//u',Store::text(str_repeat('a',159).'🎄',160))===1,'metadata truncation preserves valid UTF-8');

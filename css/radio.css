@@ -94,3 +94,12 @@
 #ash-radio .ash-directory-query-controls { display:flex;align-items:flex-end;gap:.7rem;flex-wrap:wrap;margin-top:1rem; }
 #ash-radio .ash-directory-query-controls label { display:flex;flex-direction:column;gap:.4rem; }
 #ash-radio .ash-directory-query-controls label:nth-child(2) { flex:1;min-width:12rem; }
+
+#ash-radio .ash-manual-form { margin:1.25rem 0;padding:1rem;border:1px solid var(--ash-border);border-radius:.75rem;background:var(--ash-panel); }
+#ash-radio .ash-manual-form h3 { margin:0 0 .8rem;font-size:1rem; }
+#ash-radio .ash-manual-fields { display:flex;align-items:flex-end;gap:.7rem;flex-wrap:wrap; }
+#ash-radio .ash-manual-fields label { display:flex;flex-direction:column;gap:.4rem;flex:1;min-width:min(100%,14rem); }
+#ash-radio .ash-manual-fields label:nth-child(2) { flex:2; }
+#ash-radio .ash-manual-form .ash-hint { margin:.6rem 0 0; }
+#ash-radio #ash-manual-feedback { font-size:.85rem;margin:.6rem 0 0;overflow-wrap:anywhere; }
+#ash-radio #ash-manual-feedback.ash-error { color:var(--fpp-danger-dark,var(--bs-danger,Mark)); }

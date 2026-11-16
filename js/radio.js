@@ -198,11 +198,11 @@
       $('directory-status').textContent = 'Loading one directory page…';
       try {
         const source = $('source').value;
-        const query = ['radiobrowser-search','internet-radio-genre'].includes(source) ? $('directory-query').value.trim() : '';
+        const query = ['radiobrowser-search','internet-radio-genre','internet-radio-search'].includes(source) ? $('directory-query').value.trim() : '';
         const searchBy = $('directory-by').value; const identity = JSON.stringify([source,query,searchBy]);
         const append = more && identity === directoryIdentity; const page = append ? directoryPage + 1 : 1;
         const data = await request('directory', {source, refresh:force, page,query,searchBy});
-        const currentQuery = ['radiobrowser-search','internet-radio-genre'].includes($('source').value) ? $('directory-query').value.trim() : '';
+        const currentQuery = ['radiobrowser-search','internet-radio-genre','internet-radio-search'].includes($('source').value) ? $('directory-query').value.trim() : '';
         if ($('source').value!==source || currentQuery!==query || $('directory-by').value!==searchBy) return;
         const all = append ? directory.concat(data.stations) : data.stations;
         directory = [...new Map(all.map(station => [station.url,station])).values()];
@@ -273,14 +273,29 @@
       try{await mutation('bank',{action:bankAction,bank:snapshot.config.activeBank,name:$('bank-name').value},'Preset page saved.');$('bank-dialog').close();}
       catch(err){$('bank-error').textContent=err.message;}finally{b.disabled=false;}
     });
+    $('manual-form').addEventListener('submit',async event=>{
+      event.preventDefault();const buttons=[...$('manual-form').querySelectorAll('button[type=submit]')];
+      const play=event.submitter?.value==='play';const name=$('manual-name').value.trim();const url=$('manual-url').value.trim();
+      const feedback=$('manual-feedback');feedback.hidden=true;feedback.classList.remove('ash-error');buttons.forEach(b=>b.disabled=true);
+      let station=null;
+      try {
+        station=snapshot?.config.stations.find(saved=>saved.url===url);
+        const existing=!!station;
+        if(!station)station=await mutation('station',{name,url,source:'Manual',category:'Custom',enabled:true,volume:null});
+        if(play)await mutation('control',{action:'play',uid:station.uid});
+        feedback.textContent=play ? station.name+' saved and playing.' : existing ? 'Already saved as '+station.name+'.' : station.name+' saved.';
+        $('manual-form').reset();
+      }catch(error){feedback.classList.add('ash-error');feedback.textContent=(station ? 'Station saved; playback did not start. ' : '')+error.message;}
+      finally{feedback.hidden=false;buttons.forEach(b=>b.disabled=false);}
+    });
     $('settings-form').addEventListener('submit',async e=>{
       e.preventDefault();try{await mutation('settings',{protectShow:$('protect').checked,autoRecover:$('recover').checked,defaultVolume:Number($('default-volume').value)},'Preferences saved.');}catch(err){notice(err.message,true);}
     });
     function updateSourceControls() {
-      const source=$('source').value; const custom=['radiobrowser-search','internet-radio-genre'].includes(source);
+      const source=$('source').value; const custom=['radiobrowser-search','internet-radio-genre','internet-radio-search'].includes(source);
       $('directory-query-controls').hidden=!custom; $('directory-by-label').hidden=source!=='radiobrowser-search';
-      $('directory-query-label').textContent=source==='internet-radio-genre' ? 'Genre' : 'Search';
-      $('directory-query').placeholder=source==='internet-radio-genre' ? 'jazz, oldies, country, classic rock…' : 'Enter a station name or genre/tag';
+      $('directory-query-label').textContent=source==='internet-radio-genre' ? 'Genre' : 'Search any music or station';
+      $('directory-query').placeholder=source==='internet-radio-genre' ? 'jazz, oldies, country, classic rock…' : 'rock, jazz, country, pop, oldies, station name…';
       $('directory-more').hidden=true;
     }
     $('source').addEventListener('change',()=>{updateSourceControls();$('directory-list').replaceChildren();$('directory-search').hidden=true;$('directory-status').textContent='Choose Load stations to browse this source.';});

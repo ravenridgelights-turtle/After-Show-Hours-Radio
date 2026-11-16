@@ -1,6 +1,6 @@
 <div id="ash-radio" data-api="/api/plugin/After-Show-Hours-Radio/">
   <header class="ash-heading">
-    <div><p class="ash-eyebrow">FPP 10.4 · RADIO 1.1</p><h1>After Show Hours <span>Radio</span></h1></div>
+    <div><p class="ash-eyebrow">FPP 10.4 · RADIO 1.2</p><h1>After Show Hours <span>Radio</span></h1></div>
     <span class="ash-chip" id="ash-service">Connecting</span>
   </header>
   <div id="ash-notice" role="status" aria-live="polite" hidden></div>
@@ -48,13 +48,20 @@
   </section>
   <section id="ash-tab-finder" class="ash-panel" hidden>
     <h2>A little less searching. A lot more radio.</h2>
-    <p>Choose a directory, load its station names and stream links, then save or play a station here.</p>
+    <p>Search for any station or music genre, browse a directory, or add a stream URL you already know.</p>
+    <form id="ash-manual-form" class="ash-manual-form">
+      <h3>Add a known station</h3><div class="ash-manual-fields">
+        <label>Station name<input id="ash-manual-name" required maxlength="160" placeholder="My favorite station" autocomplete="off"></label>
+        <label>Stream URL<input id="ash-manual-url" type="url" required maxlength="2048" placeholder="https://station.example/live.mp3"></label>
+        <button type="submit" value="save">Save station</button><button type="submit" value="play" class="ash-primary">Save &amp; play</button>
+      </div><p class="ash-hint">Paste a direct HTTP or HTTPS audio stream URL.</p><p id="ash-manual-feedback" role="status" aria-live="polite" hidden></p>
+    </form>
     <div class="ash-directory-controls"><label>Station source <select id="ash-source">
       <optgroup label="Radio Browser">
-        <option value="radiobrowser-christmas">Radio Browser · Christmas</option><option value="radiobrowser-halloween">Radio Browser · Halloween</option><option value="radiobrowser-newyear">Radio Browser · New Year / Party</option><option value="radiobrowser-search">Radio Browser · Search stations or genres</option>
+        <option value="radiobrowser-christmas">Radio Browser · Christmas</option><option value="radiobrowser-halloween">Radio Browser · Halloween</option><option value="radiobrowser-newyear">Radio Browser · New Year / Party</option><option value="radiobrowser-search">Radio Browser · Search any music or station</option>
       </optgroup>
       <optgroup label="181.FM"><option value="181fm-christmas">181.FM · Christmas</option><option value="181fm-all">181.FM · All stations</option></optgroup>
-      <optgroup label="Internet-Radio.com"><option value="internet-radio-christmas">Internet-Radio.com · Christmas</option><option value="internet-radio-genre">Internet-Radio.com · Browse a genre</option></optgroup>
+      <optgroup label="Internet-Radio.com"><option value="internet-radio-search">Internet-Radio.com · Search any music or station</option><option value="internet-radio-christmas">Internet-Radio.com · Christmas</option><option value="internet-radio-genre">Internet-Radio.com · Browse a genre</option></optgroup>
       <optgroup label="Halloweenradio.net"><option value="halloweenradio">Halloweenradio.net</option></optgroup>
       <optgroup label="StreamURL"><option value="christmas">StreamURL · Christmas</option><option value="halloween">StreamURL · Halloween</option><option value="newyear">StreamURL · New Year</option></optgroup>
     </select></label><button type="button" class="ash-primary" id="ash-directory-load">Load stations</button><button type="button" id="ash-directory-refresh">Refresh source</button></div>

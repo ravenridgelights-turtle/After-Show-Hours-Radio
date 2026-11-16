@@ -24,6 +24,13 @@ final class Catalog
                 $throttle['last']=$now;
                 Store::write($this->store->runDir.'/directory-limits.json',$throttle);
                 try {
+                    if ($source==='internet-radio-search' && $page>1) {
+                        $previous=DirectorySources::request($source,$page-1,$spec['term'],$spec['searchBy']);
+                        $previousCache=Store::read($this->store->dataDir.'/catalog-'.$previous['cacheKey'].'.json');
+                        $next=$previousCache['nextUrl'] ?? null;
+                        if (!$next || !DirectorySources::safeInternetRadioPage($next)) throw new \RuntimeException('Load the previous search page before requesting more results.');
+                        $spec['url']=$next;
+                    }
                     $r=call_user_func($this->fetch,$spec['url'],8,1572864,false,$spec['hosts']);
                     if ($r['status']<200 || $r['status']>=300) {
                         $retry=$r['headers']['retry-after'] ?? '600';
@@ -35,7 +42,7 @@ final class Catalog
                     switch ($spec['kind']) {
                         case 'radiobrowser': $parsed=DirectorySources::parseRadioBrowser($r['body'],ucwords($spec['term']));break;
                         case '181fm': $parsed=DirectorySources::parse181($r['body']);break;
-                        case 'internet-radio': $parsed=DirectorySources::parseInternetRadio($r['body'],$spec['term'],$page);break;
+                        case 'internet-radio': $parsed=DirectorySources::parseInternetRadio($r['body'],$spec['term'],$page,$r['url']);break;
                         default: $parsed=self::parse($r['body'],$r['url'],$source);
                     }
                     if (!$parsed['stations'] && in_array($spec['kind'],['streamurl','halloweenradio'],true)) throw new \RuntimeException('No playable links found. The site may have changed or require a browser.');

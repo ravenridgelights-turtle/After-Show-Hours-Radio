@@ -37,7 +37,7 @@ function ashradio_reply($callback)
     catch (Throwable $e) { return json(['status'=>false,'error'=>$e->getMessage()]); }
 }
 function ashradio_details() { return ashradio_reply(function() { return \AfterShow\radio()->details(); }); }
-function ashradio_nowPlaying() { return ashradio_reply(function() { return \AfterShow\radio()->nowPlaying(); }); }
+function ashradio_nowPlaying() { return ashradio_reply(function() { return \AfterShow\radio()->nowPlaying($_GET['bank'] ?? null); }); }
 function ashradio_control()
 {
     return ashradio_reply(function() {

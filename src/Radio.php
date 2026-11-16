@@ -31,18 +31,26 @@ final class Radio
         catch (\Throwable $e) { $status=['player'=>['state'=>'unavailable'],'song'=>[]]; $error=$e->getMessage(); }
         return ['config'=>$config, 'state'=>$state, 'audio'=>$status, 'error'=>$error];
     }
-    public function nowPlaying()
+    public function nowPlaying($bank=null)
     {
         $inactive=['active'=>false,'pollAfter'=>15];$state=$this->store->state();
         if (!$state['wanted'] || call_user_func($this->showCheck)!==false) return $inactive;
         try { $status=$this->mpd->status(); } catch (\Throwable $e) { return $inactive; }
         if (($status['player']['state'] ?? '')!=='play') return $inactive;
         $station=null;
-        foreach ($this->store->config()['stations'] as $s) if ($s['uid']===($state['uid'] ?? null)) $station=$s;
+        $config=$this->store->config();$names=array_column($config['stations'],'name','uid');
+        foreach ($config['stations'] as $s) if ($s['uid']===($state['uid'] ?? null)) $station=$s;
         if (!$station) return $inactive;
+        $bank=Store::text($bank ?? '',50);
+        if (!isset($config['banks'][$bank])) $bank=$config['activeBank'];
+        $banks=[];foreach ($config['banks'] as $id=>$page) $banks[]=['id'=>$id,'name'=>$page['name']];
+        $presets=[];for ($slot=1;$slot<=12;$slot++) {
+            $uid=$config['banks'][$bank]['presets'][$slot] ?? null;
+            $presets[]=['slot'=>$slot,'name'=>$names[$uid] ?? '', 'assigned'=>isset($names[$uid]), 'current'=>$uid!==null && $uid===$state['uid']];
+        }
         $song=$status['song'];$title=Store::text($song['Title'] ?? '',300);$artist=Store::text($song['Artist'] ?? '',160);
         if ($artist && $title && stripos($title,$artist)===false) $title=$artist.' — '.$title;
-        return ['active'=>true,'pollAfter'=>5,'station'=>$station['name'],'track'=>$title,
+        return ['active'=>true,'pollAfter'=>5,'station'=>$station['name'],'track'=>$title,'bank'=>$bank,'banks'=>$banks,'presets'=>$presets,
             'volume'=>(int)($status['player']['volume'] ?? $state['volume']),'muted'=>(bool)($state['muted'] ?? false),
             'bitrate'=>max(0,(int)($status['player']['bitrate'] ?? 0))];
     }

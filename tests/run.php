@@ -20,6 +20,10 @@ try {
  $radio->settings(['defaultVolume'=>55]);$radio->play($a['uid']);
  check($store->state()['volume']===55,'starting volume uses saved preference');
  check($radio->nowPlaying()['active'] && $radio->nowPlaying()['station']==='Christmas One','Status summary exposes playing station and track while FPP is idle');
+ $radio->savePreset(2,$a['uid'],'christmas');$radio->savePreset(7,$b['uid'],'halloween');
+ $summary=$radio->nowPlaying('halloween');check($summary['bank']==='halloween' && count($summary['presets'])===12 && $summary['presets'][6]['name']==='Halloween Two','Status controls get 12 slots for the requested preset page');
+ check(!isset($summary['banks'][0]['presets']),'Status summary sends page names without every page assignment');
+ check($radio->nowPlaying('removed-page')['bank']===$store->config()['activeBank'],'Status selector recovers when a preset page is removed');
  $busy=true;check(!$radio->nowPlaying()['active'],'Status summary hides radio during an FPP show');
  $busy=null;check(!$radio->nowPlaying()['active'],'Status summary hides radio if FPP status is unknown');$busy=false;
  $radio->move(1);check($store->state()['uid']===$b['uid'],'Next tunes the next enabled station');
