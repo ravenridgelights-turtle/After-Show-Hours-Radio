@@ -64,6 +64,8 @@ try {
  Store::write($store->runDir.'/directory-limits.json',['last'=>time(),'sources'=>['halloweenradio'=>time()+7200]]);
  $fallback=$catalog->load('halloweenradio',true);check($fallback['bundled'] && count($fallback['stations'])===14 && $fallback['warning'],'blocked sources use clearly labeled bundled links and honor backoff');
  $catalog->clearCache();check(is_file($store->runDir.'/directory-limits.json'),'clearing cache does not bypass request backoff');
+ Store::write($store->runDir.'/directory-limits.json',['last'=>0,'sources'=>['streamurl'=>time()+7200]]);
+ check($catalog->load('newyear',true)['warning']!==null && $catalog->load('halloween',true)['warning']!==null,'StreamURL backoff is shared across all holiday categories');
  $legacy=$dir.'/legacy.json';Store::write($legacy,['streams'=>['Example'=>['uid'=>9,'active'=>'true','url'=>'https://legacy.example/radio','volume'=>25,'priority'=>2]]]);
  $legacyStore=new Store($dir.'/migration',$dir.'/migration-run');check($legacyStore->migrateLegacy($legacy)===1,'original plugin stations migrate without editing original config');
  check($legacyStore->config()['stations'][0]['enabled'] && $legacyStore->migrateLegacy($legacy)===0,'migration is idempotent');

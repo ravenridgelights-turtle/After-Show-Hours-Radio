@@ -30,7 +30,7 @@ final class Store
         try {
             if (file_put_contents($tmp, $json."\n") === false) throw new \RuntimeException('Could not write radio settings.');
             chmod($tmp, 0660);
-            if (function_exists('posix_geteuid') && posix_geteuid() === 0) @chgrp($tmp, 'fpp');
+            @chgrp($tmp, 'fpp');
             if (!rename($tmp, $file)) throw new \RuntimeException('Could not save radio settings.');
         } finally { if (is_file($tmp)) unlink($tmp); }
     }
@@ -40,7 +40,7 @@ final class Store
         $fp = fopen($file, 'c');
         if (!$fp) throw new \RuntimeException('Radio lock is unavailable.');
         @chmod($file, 0660);
-        if (function_exists('posix_geteuid') && posix_geteuid() === 0) @chgrp($file, 'fpp');
+        @chgrp($file, 'fpp');
         $until = microtime(true) + $wait;
         while (!flock($fp, LOCK_EX | LOCK_NB)) {
             if (microtime(true) >= $until) { fclose($fp); throw new \RuntimeException('Radio is busy. Try again shortly.'); }

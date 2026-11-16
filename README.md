@@ -89,7 +89,7 @@ Select a source and **Load stations**. Use **Save station** or **Play** on a res
 - One directory/detail request at a time; at least **10 seconds** between live requests.
 - **6-hour cache**; one requested page at a time, at most 60 results per page and 10 directory pages.
 - Bounded HTTP connection/time limits and a **1.5 MB** directory response cap. Stream checks stop after a small audio sample.
-- Provider `Retry-After` is respected up to one day. Failed sources back off at least 10 minutes; clearing cache does not clear backoff.
+- Provider `Retry-After` is respected up to one day, shared across all StreamURL categories. Failed sources back off at least 10 minutes; clearing cache does not clear backoff.
 - No stream checks during routine UI polling. The monitor reads local playback progress about once a minute and attempts at most one recovery per check.
 - The browser polls local status every 5 seconds during radio playback and every 15 seconds when stopped; polling pauses in hidden tabs.
 

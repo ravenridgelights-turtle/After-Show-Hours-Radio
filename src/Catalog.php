@@ -16,11 +16,12 @@ final class Catalog
         if (!isset(self::SOURCES[$source])) throw new \InvalidArgumentException('Unknown station source.');
         $page=max(1,min(10,(int)$page));if ($source==='halloweenradio') $page=1;
         return $this->store->lock('directory',function() use ($source,$refresh,$page) {
+            $limitKey=$source==='halloweenradio' ? 'halloweenradio' : 'streamurl';
             $path=$this->store->dataDir.'/catalog-'.$source.'-'.$page.'.json';
             $cache=Store::read($path);$now=time();$warning=null;
             if (!$refresh && $cache && $now-($cache['fetchedAt'] ?? 0)<21600) return $this->result($source,$cache,true);
             $throttle=Store::read($this->store->runDir.'/directory-limits.json');
-            if ($now<($throttle['sources'][$source] ?? 0)) $warning='This source asked us to wait. Try again after '.date('g:i a',$throttle['sources'][$source]).'.';
+            if ($now<($throttle['sources'][$limitKey] ?? 0)) $warning='This source asked us to wait. Try again after '.date('g:i a',$throttle['sources'][$limitKey]).'.';
             elseif ($now-($throttle['last'] ?? 0)<10) $warning='Please wait 10 seconds between directory requests.';
             if (!$warning) {
                 $throttle['last']=$now;
@@ -31,7 +32,7 @@ final class Catalog
                     if ($r['status']<200 || $r['status']>=300) {
                         $retry=$r['headers']['retry-after'] ?? '600';
                         $seconds=ctype_digit($retry) ? (int)$retry : max(0,(int)strtotime($retry)-$now);
-                        $throttle['sources'][$source]=$now+max(60,min(86400,$seconds));
+                        $throttle['sources'][$limitKey]=$now+max(60,min(86400,$seconds));
                         Store::write($this->store->runDir.'/directory-limits.json',$throttle);
                         throw new \RuntimeException('Directory returned HTTP '.$r['status'].'. Saved stations still work; its retry delay will be respected.');
                     }
@@ -41,7 +42,7 @@ final class Catalog
                     return $this->result($source,$cache,false);
                 } catch (\Throwable $e) {
                     $warning=$e->getMessage();
-                    $throttle['sources'][$source]=max($throttle['sources'][$source] ?? 0,$now+600);
+                    $throttle['sources'][$limitKey]=max($throttle['sources'][$limitKey] ?? 0,$now+600);
                     Store::write($this->store->runDir.'/directory-limits.json',$throttle);
                 }
             }
@@ -126,20 +127,27 @@ final class Catalog
         if (strtolower($p['host'])!=='streamurl.link' || !preg_match('#^/(r|radio|station|stream)/[^/]+#',$p['path'] ?? '')) throw new \InvalidArgumentException('Only StreamURL station pages can be resolved.');
         // A detail lookup uses the same global cooldown and source backoff as a directory.
         return $this->store->lock('directory',function() use ($source,$url) {
+            $limitKey='streamurl';
             $path=$this->store->dataDir.'/detail-'.hash('sha256',$url).'.json';$cache=Store::read($path);$now=time();
             if ($cache && $now-$cache['fetchedAt']<21600) return $cache;
             $t=Store::read($this->store->runDir.'/directory-limits.json');
-            if ($now<($t['sources'][$source] ?? 0) || $now-($t['last'] ?? 0)<10) throw new \RuntimeException('Directory is cooling down. Wait before resolving another station.');
+            if ($now<($t['sources'][$limitKey] ?? 0) || $now-($t['last'] ?? 0)<10) throw new \RuntimeException('Directory is cooling down. Wait before resolving another station.');
             $t['last']=$now;Store::write($this->store->runDir.'/directory-limits.json',$t);
+            try {
             $r=Http::get($url,8,1572864,false,['streamurl.link']);
             if ($r['status']<200 || $r['status']>=300) {
                 $retry=$r['headers']['retry-after'] ?? '600';$seconds=ctype_digit($retry) ? (int)$retry : max(0,(int)strtotime($retry)-$now);
-                $t['sources'][$source]=$now+max(60,min(86400,$seconds));Store::write($this->store->runDir.'/directory-limits.json',$t);
+                $t['sources'][$limitKey]=$now+max(60,min(86400,$seconds));Store::write($this->store->runDir.'/directory-limits.json',$t);
                 throw new \RuntimeException('Station page returned HTTP '.$r['status'].'. Retry delay is active.');
             }
             $parsed=self::parse($r['body'],$r['url'],$source);$parsed['stations']=array_values(array_filter($parsed['stations'],function($s) { return !$s['detail']; }));
             if (!$parsed['stations']) throw new \RuntimeException('This station page did not expose a playable stream.');
             $parsed['fetchedAt']=$now;Store::write($path,$parsed);return $parsed;
+            } catch (\Throwable $e) {
+                $t['sources'][$limitKey]=max($t['sources'][$limitKey] ?? 0,$now+600);
+                Store::write($this->store->runDir.'/directory-limits.json',$t);
+                throw $e;
+            }
         },0.1);
     }
     public function clearCache()
