@@ -1,5 +1,10 @@
 # Changes
 
+## 1.2.2 — November 16, 2026
+
+- Replaced the local `icon.png` as well as the metadata icon. FPP 10.4 gives the local file priority for installed plugins, so the new boombox now appears on the installed card and plugin page.
+- Includes the 1.2.1 search/cache fix and the full release-page install and usage guide.
+
 ## 1.2.1 — November 16, 2026
 
 - Fixed stale browser assets after an FPP Update, which could hide Internet-Radio.com's search field despite the new source option appearing. Plugin and Status assets now use content hashes in their URLs; normal page refresh loads the current version.

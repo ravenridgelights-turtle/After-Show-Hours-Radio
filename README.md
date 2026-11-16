@@ -4,7 +4,7 @@
 
 An internet radio for **Falcon Player (FPP) 10.4**. Based on Jason Cross's [fpp-after-hours](https://github.com/jcrossbdn/fpp-after-hours), with a new radio interface, station controls and discovery. Original MIT license and copyright are retained in [LICENSE](LICENSE).
 
-**[Latest release: install and usage instructions](https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio/releases/latest)** · [Version 1.2.1 guide](docs/releases/v1.2.1.md) · [Changes](CHANGELOG.md)
+**[Latest release: install and usage instructions](https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio/releases/latest)** · [Version 1.2.2 guide](docs/releases/v1.2.2.md) · [Changes](CHANGELOG.md)
 
 ## Install in FPP
 
@@ -28,7 +28,7 @@ If the URL field is hidden, switch FPP's UI level to Developer. You can return t
 
 Use **Plugin Manager → Check for Updates → Update** on **After Show Hours Radio**, then refresh the plugin page. Keep the same installation URL. The plugin follows the existing `main` branch without a commit pin.
 
-**Version 1.2.1** fixes the missing Internet-Radio.com search box caused by stale browser assets after updates, and adds a distinct boombox icon. The plugin and Status pages use content-versioned script/style URLs so a normal refresh loads updated controls. The radio page shows **RADIO 1.2.1**. It includes the compact Status controls, manual stream entry and general station/music search introduced in 1.2.
+**Version 1.2.2** fixes the missing Internet-Radio.com search box caused by stale browser assets after updates, and adds a distinct boombox icon. The plugin and Status pages use content-versioned script/style URLs so a normal refresh loads updated controls. The radio page shows **RADIO 1.2.2**. It includes the compact Status controls, manual stream entry and general station/music search introduced in 1.2.
 
 This update's `fpp_upgrade.sh` runs after FPP pulls the code; it does not restart audio services, restart FPPD, request a reboot, change FPP files, or write your station/preset settings. FPP may display its normal disclosure review for the directory hosts when updating from an older version. No reinstall is needed. Each new version's GitHub release includes the same install link and a step-by-step use guide, published after automated checks pass.
 
@@ -166,4 +166,4 @@ Set `CHROMIUM_PATH` to use a system Chromium. Set `UI_SCREENSHOT_DIR` to choose 
 
 ## Provenance
 
-Original project: `jcrossbdn/fpp-after-hours`, MIT, upstream commit `5cd18ea8148a793623d81607a5360f4bb86d72be`. This edition retains the MIT license and PipeWire bridge approach. It uses its own amber/teal boombox icon; the upstream `icon.png` is retained only as an unused historical asset. Radio control, dedicated MPD service, interface, presets, discovery and scheduling wrappers were reworked for this edition. It is independently maintained by `ravenridgelights-turtle`.
+Original project: `jcrossbdn/fpp-after-hours`, MIT, upstream commit `5cd18ea8148a793623d81607a5360f4bb86d72be`. This edition retains the MIT license and PipeWire bridge approach. It uses its own amber/teal boombox icon in both FPP's local `icon.png` and the metadata icon URL. Radio control, dedicated MPD service, interface, presets, discovery and scheduling wrappers were reworked for this edition. It is independently maintained by `ravenridgelights-turtle`.
