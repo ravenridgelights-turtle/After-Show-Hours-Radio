@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   function init() {
-    if(document.getElementById('ash-status-radio') || typeof window.OnSystemStatusChange!=='function')return;
+    if(document.getElementById('ash-status-radio') || typeof window.OnSystemStatusChange!=='function' || typeof window.AfterShowRadioStatus?.audioBusy!=='function')return;
     const anchor=document.querySelector('#playerStatusTop .playerStatusRow');if(!anchor)return;
     const element=(tag,text,className)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e;};
     const panel=element('section');panel.id='ash-status-radio';panel.hidden=true;panel.setAttribute('aria-label','After Show Hours Radio playback');
@@ -26,9 +26,9 @@
     panel.append(heading,body,presetRow,errorText);anchor.insertAdjacentElement('afterend',panel);
     let timer=null,controller=null,generation=0,selectedBank='',presetHash='',banksHash='',actionBusy=false,actionGeneration=0;
     try{selectedBank=sessionStorage.getItem('ash-radio-status-bank') || '';}catch(error){}
-    function idle(){const s=window.lastStatusJSON;return !document.hidden && s && String(s.status_name).toLowerCase()==='idle' && Number(s.status)===0;}
+    function radioAllowed(){return !document.hidden && window.AfterShowRadioStatus.audioBusy(window.lastStatusJSON)===false;}
     function hide(){generation++;actionGeneration++;actionBusy=false;panel.hidden=true;errorText.hidden=true;clearTimeout(timer);timer=null;if(controller)controller.abort();controller=null;}
-    function refreshNow(){generation++;clearTimeout(timer);timer=null;if(controller)controller.abort();controller=null;if(idle())poll();else hide();}
+    function refreshNow(){generation++;clearTimeout(timer);timer=null;if(controller)controller.abort();controller=null;if(radioAllowed())poll();else hide();}
     function disableControls(){
       controlButtons.forEach(b=>b.disabled=actionBusy && b.dataset.radioAction!=='stop');
       presets.querySelectorAll('button').forEach(b=>b.disabled=actionBusy || b.dataset.assigned!=='true');bankSelect.disabled=actionBusy;
@@ -48,7 +48,7 @@
       presets.replaceChildren(...buttons);disableControls();
     }
     async function sendControl(action,args={}){
-      if(!idle()){hide();return;}if(actionBusy && action!=='stop')return;
+      if(!radioAllowed()){hide();return;}if(actionBusy && action!=='stop')return;
       const mine=++actionGeneration;actionBusy=true;errorText.hidden=true;disableControls();
       const request=new AbortController(),timeout=setTimeout(()=>request.abort(),8000);
       try{
@@ -56,7 +56,7 @@
         if(!response.ok)throw new Error('Radio control returned HTTP '+response.status+'.');const result=await response.json();if(!result.status)throw new Error(result.error || 'Radio control failed.');
         if(mine!==actionGeneration)return;
         if(action==='stop')hide();else refreshNow();
-      }catch(error){if(mine===actionGeneration && idle()){errorText.textContent=error.name==='AbortError'?'Radio control timed out.':error.message;errorText.hidden=false;}}
+      }catch(error){if(mine===actionGeneration && radioAllowed()){errorText.textContent=error.name==='AbortError'?'Radio control timed out.':error.message;errorText.hidden=false;}}
       finally{clearTimeout(timeout);if(mine===actionGeneration || action==='stop'){actionBusy=false;disableControls();}}
     }
     bankSelect.addEventListener('change',()=>{
@@ -64,17 +64,17 @@
       presets.querySelectorAll('button').forEach(b=>b.disabled=true);presetHash='';refreshNow();
     });
     async function poll(){
-      timer=null;if(!idle()){hide();return;}if(controller)return;
+      timer=null;if(!radioAllowed()){hide();return;}if(controller)return;
       const mine=++generation,request=new AbortController();controller=request;const timeout=setTimeout(()=>request.abort(),4500);let wait=15000;
       try{
         const url='/api/plugin/After-Show-Hours-Radio/nowPlaying'+(selectedBank?'?bank='+encodeURIComponent(selectedBank):'');
         const response=await fetch(url,{credentials:'same-origin',cache:'no-store',signal:request.signal});if(!response.ok)throw new Error('Status unavailable');const result=await response.json();
-        if(mine!==generation || !idle())return;const data=result.status && result.data;panel.hidden=!(data && data.active);
+        if(mine!==generation || !radioAllowed())return;const data=result.status && result.data;panel.hidden=!(data && data.active);
         if(data && data.active){station.textContent=data.station;track.textContent=data.track || 'Live internet radio';extra.textContent=[data.muted?'Muted':'Radio volume '+data.volume+'%',data.bitrate?data.bitrate+' kbps':''].filter(Boolean).join(' · ');renderPresets(data);wait=5000;}
       }catch(error){if(mine===generation)panel.hidden=true;}
-      finally{clearTimeout(timeout);if(controller===request)controller=null;if(mine===generation && idle())timer=setTimeout(poll,wait);}
+      finally{clearTimeout(timeout);if(controller===request)controller=null;if(mine===generation && radioAllowed())timer=setTimeout(poll,wait);}
     }
-    function changed(){if(!idle()){hide();return;}if(!timer && !controller)poll();}
+    function changed(){if(!radioAllowed()){hide();return;}if(!timer && !controller)poll();}
     window.OnSystemStatusChange(changed);document.addEventListener('visibilitychange',changed);window.addEventListener('pagehide',hide);changed();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();

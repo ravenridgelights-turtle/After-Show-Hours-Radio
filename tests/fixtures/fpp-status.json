@@ -1,0 +1,907 @@
+[
+  {
+    "label": "FPP idle",
+    "status": {
+      "fppd": "running",
+      "status": 0,
+      "status_name": "idle",
+      "current_song": "",
+      "current_sequence": "",
+      "current_playlist": {
+        "playlist": "",
+        "type": ""
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": false
+  },
+  {
+    "label": "minimal idle status",
+    "status": {
+      "status": 0,
+      "status_name": "idle"
+    },
+    "busy": false
+  },
+  {
+    "label": "stopped",
+    "status": {
+      "status": "0",
+      "status_name": "stopped"
+    },
+    "busy": false
+  },
+  {
+    "label": "static lights-only sequence playlist",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": false
+  },
+  {
+    "label": "direct sequence with no playlist",
+    "status": {
+      "status": 1,
+      "status_name": "playing",
+      "current_sequence": "static.fseq",
+      "current_song": ""
+    },
+    "busy": false
+  },
+  {
+    "label": "remote sequence with no media",
+    "status": {
+      "status": "1",
+      "status_name": "playing",
+      "current_sequence": "static.fseq",
+      "current_song": "",
+      "media_filename": ""
+    },
+    "busy": false
+  },
+  {
+    "label": "uppercase sequence filename",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "STATIC.FSEQ",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": false
+  },
+  {
+    "label": "sequence stopping gracefully",
+    "status": {
+      "fppd": "running",
+      "status": 2,
+      "status_name": "stopping gracefully",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": false
+  },
+  {
+    "label": "sequence stopping after loop",
+    "status": {
+      "fppd": "running",
+      "status": 3,
+      "status_name": "stopping gracefully after loop",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": false
+  },
+  {
+    "label": "musical sequence",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "show.mp3",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Show",
+        "type": "both"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "media entry before filename arrives",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Show",
+        "type": "media"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "combined entry before filename arrives",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Show",
+        "type": "both"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "media playing flag overrides silent sequence",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": true,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "foreground audio slot overrides idle",
+    "status": {
+      "fppd": "running",
+      "status": 0,
+      "status_name": "idle",
+      "current_song": "",
+      "current_sequence": "",
+      "current_playlist": {
+        "playlist": "",
+        "type": ""
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "playing",
+          "mediaFilename": "song.mp3"
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "background media slot overrides silent sequence",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 2,
+          "status": "playing",
+          "mediaFilename": "background.mp3"
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "paused media slot remains protected",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "paused",
+          "mediaFilename": "song.mp3"
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "remote media filename overrides idle",
+    "status": {
+      "fppd": "running",
+      "status": 0,
+      "status_name": "idle",
+      "current_song": "",
+      "current_sequence": "",
+      "current_playlist": {
+        "playlist": "",
+        "type": ""
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ],
+      "media_filename": "remote.mp3"
+    },
+    "busy": true
+  },
+  {
+    "label": "song filename overrides idle",
+    "status": {
+      "fppd": "running",
+      "status": 0,
+      "status_name": "idle",
+      "current_song": "annoucement.wav",
+      "current_sequence": "",
+      "current_playlist": {
+        "playlist": "",
+        "type": ""
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "paused playlist remains protected",
+    "status": {
+      "fppd": "running",
+      "status": 5,
+      "status_name": "paused",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "test mode remains protected",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "testing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "stopping now remains protected",
+    "status": {
+      "fppd": "running",
+      "status": 4,
+      "status_name": "stopping now",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "unknown FPP activity remains protected",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "unknown",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "between playlist entries stays protected",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "",
+      "current_playlist": {
+        "playlist": "Show",
+        "type": ""
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "playlist pause stays protected",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "",
+      "current_playlist": {
+        "playlist": "Show",
+        "type": "pause"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "script named like a sequence is not a sequence",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Show",
+        "type": "script"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "unknown playlist type stays protected",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Show",
+        "type": "custom"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "named playlist with missing item type stays protected",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Show",
+        "type": ""
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": true
+  },
+  {
+    "label": "missing song field cannot prove sequence is silent",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": null
+  },
+  {
+    "label": "invalid song field",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": null,
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": null
+  },
+  {
+    "label": "daemon unavailable",
+    "status": {
+      "fppd": "stopped",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": null
+  },
+  {
+    "label": "no status response",
+    "status": null,
+    "busy": null
+  },
+  {
+    "label": "missing status fields",
+    "status": {},
+    "busy": null
+  },
+  {
+    "label": "mismatched playing status number",
+    "status": {
+      "fppd": "running",
+      "status": 0,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": null
+  },
+  {
+    "label": "mismatched idle status number",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "idle",
+      "current_song": "",
+      "current_sequence": "",
+      "current_playlist": {
+        "playlist": "",
+        "type": ""
+      },
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": null
+  },
+  {
+    "label": "invalid media state",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": "unknown",
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": null
+  },
+  {
+    "label": "invalid stream slots",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": "unknown"
+    },
+    "busy": null
+  },
+  {
+    "label": "invalid slot entry",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": {
+        "playlist": "Christmas Static",
+        "type": "sequence"
+      },
+      "media_playing": false,
+      "streamSlots": [
+        null
+      ]
+    },
+    "busy": null
+  },
+  {
+    "label": "invalid playlist entry",
+    "status": {
+      "fppd": "running",
+      "status": 1,
+      "status_name": "playing",
+      "current_song": "",
+      "current_sequence": "christmas static.fseq",
+      "current_playlist": "unknown",
+      "media_playing": false,
+      "streamSlots": [
+        {
+          "slot": 1,
+          "status": "idle",
+          "mediaFilename": ""
+        },
+        {
+          "slot": 2,
+          "status": "idle",
+          "mediaFilename": ""
+        }
+      ]
+    },
+    "busy": null
+  }
+]

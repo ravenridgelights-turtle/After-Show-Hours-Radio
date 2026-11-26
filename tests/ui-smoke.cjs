@@ -45,7 +45,7 @@ const server=http.createServer(async(req,res)=>{
  }
  if(req.url==='/fpp-status'){
   res.setHeader('Content-Type','text/html');
-  return res.end('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{--bs-body-bg:#f8f9fa;--bs-body-color:#212529;--fpp-bg-card:#fff;--fpp-border:#dee2e6;--fpp-primary:#0d6efd}.btn{display:inline-block;font:inherit;border:1px solid transparent;cursor:pointer}.btn-rounded{border-radius:2rem}.btn-pleasant{background:#596168;color:#fff}.btn-danger{background:#dc3545;color:#fff}.btn-success{background:#198754;color:#fff}.btn:disabled{opacity:.45;cursor:default}body{font:16px system-ui;margin:1rem;background:var(--bs-body-bg);color:var(--bs-body-color)}[data-bs-theme="dark"]{color-scheme:dark;--bs-body-bg:#212529;--bs-body-color:#dee2e6;--fpp-bg-card:#2c3034;--fpp-border:#495057}</style><link rel="stylesheet" href="/assets/status.css"><script>window.lastStatusJSON=Object.freeze({status:0,status_name:"idle"});window.statusHandlers=[];window.OnSystemStatusChange=fn=>statusHandlers.push(fn);window.applyFPPStatus=data=>{window.lastStatusJSON=Object.freeze(data);document.getElementById("txtPlayerStatus").textContent=data.status_name;document.getElementById("native-song").textContent=data.current_song||"";statusHandlers.forEach(fn=>fn());};</script><script defer src="/assets/status.js"></script></head><body><h1>Status - Player Mode</h1><div id="playerStatusTop"><div class="playerStatusRow"><span>Player Status: </span><span id="txtPlayerStatus">idle</span><span id="native-song"></span></div><button id="native-play">Play show</button></div></body></html>');
+  return res.end('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{--bs-body-bg:#f8f9fa;--bs-body-color:#212529;--fpp-bg-card:#fff;--fpp-border:#dee2e6;--fpp-primary:#0d6efd}.btn{display:inline-block;font:inherit;border:1px solid transparent;cursor:pointer}.btn-rounded{border-radius:2rem}.btn-pleasant{background:#596168;color:#fff}.btn-danger{background:#dc3545;color:#fff}.btn-success{background:#198754;color:#fff}.btn:disabled{opacity:.45;cursor:default}body{font:16px system-ui;margin:1rem;background:var(--bs-body-bg);color:var(--bs-body-color)}[data-bs-theme="dark"]{color-scheme:dark;--bs-body-bg:#212529;--bs-body-color:#dee2e6;--fpp-bg-card:#2c3034;--fpp-border:#495057}</style><link rel="stylesheet" href="/assets/status.css"><script>window.lastStatusJSON=Object.freeze({status:0,status_name:"idle"});window.statusHandlers=[];window.OnSystemStatusChange=fn=>statusHandlers.push(fn);window.applyFPPStatus=data=>{window.lastStatusJSON=Object.freeze(data);document.getElementById("txtPlayerStatus").textContent=data?.status_name||"unknown";document.getElementById("native-song").textContent=data?.current_song||"";document.getElementById("native-sequence").textContent=data?.current_sequence||"";statusHandlers.forEach(fn=>fn());};</script><script defer src="/assets/fpp-status.js"></script><script defer src="/assets/status.js"></script></head><body><h1>Status - Player Mode</h1><div id="playerStatusTop"><div class="playerStatusRow"><span>Player Status: </span><span id="txtPlayerStatus">idle</span><span id="native-song"></span><span id="native-sequence"></span></div><button id="native-play">Play show</button></div></body></html>');
  }
  if(req.url==='/'){
   res.setHeader('Content-Type','text/html');
@@ -127,9 +127,27 @@ const server=http.createServer(async(req,res)=>{
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.screenshot({path:path.join(out,'status-'+theme+'-'+width+'.png'),fullPage:true});
  }
+ const statusCases=require('./fixtures/fpp-status.json');
+ const silent=statusCases.find(test=>test.label==='static lights-only sequence playlist').status;
+ await page.evaluate(status=>window.applyFPPStatus(status),silent);await page.waitForSelector('#ash-status-radio:not([hidden])');
+ assert.equal(await page.locator('#native-sequence').textContent(),'christmas static.fseq');
+ assert.equal(await page.locator('#txtPlayerStatus').textContent(),'playing','Radio does not replace the native sequence status');
+ await page.locator('[data-radio-action=next]').click();await page.waitForFunction(()=>!document.querySelector('[data-radio-action=next]').disabled);
+ assert.equal(controlRequests.at(-1).action,'next','Status Next works while a silent sequence runs');
+ await page.locator('.ash-status-presets button[data-slot="1"]').click();await page.waitForFunction(()=>!document.querySelector('[data-radio-action=next]').disabled);
+ assert.equal(controlRequests.at(-1).action,'preset','Status presets work while a silent sequence runs');
+ assert.deepEqual(await page.evaluate(()=>window.lastStatusJSON),silent,'Radio controls leave all native animation status data untouched');
+ await page.screenshot({path:path.join(out,'status-silent-sequence.png'),fullPage:true});
+ for(const test of statusCases){
+  await page.evaluate(status=>window.applyFPPStatus(status),test.status);
+  if(test.busy===false)await page.waitForSelector('#ash-status-radio:not([hidden])');
+  else assert.equal(await page.locator('#ash-status-radio').isVisible(),false,test.label);
+  assert.deepEqual(await page.evaluate(()=>window.lastStatusJSON),test.status,'Native status preserved: '+test.label);
+ }
+ await page.evaluate(status=>window.applyFPPStatus(status),silent);await page.waitForSelector('#ash-status-radio:not([hidden])');
  await page.locator('[data-radio-action=stop]').click();await page.waitForSelector('#ash-status-radio[hidden]',{state:'attached'});assert.equal(controlRequests.at(-1).action,'stop');
  radioStatus.active=true;const resumed=page.waitForResponse(response=>response.url().includes('/nowPlaying'));await page.reload();await resumed;await page.waitForSelector('#ash-status-radio:not([hidden])');
- const show={status:1,status_name:'playing',current_song:'Actual FPP show song'};
+ const show={status:1,status_name:'playing',current_song:'Actual FPP show song',current_sequence:'show.fseq',current_playlist:{playlist:'Show',type:'both'}};
  await page.evaluate(show=>window.applyFPPStatus(show),show);await page.waitForSelector('#ash-status-radio[hidden]',{state:'attached'});
  assert.equal(await page.locator('#txtPlayerStatus').textContent(),'playing');assert.equal(await page.locator('#native-song').textContent(),show.current_song);
  const busyCalls=statusCalls;await page.waitForTimeout(5300);assert.equal(statusCalls,busyCalls,'No radio polling during an active show');
@@ -139,6 +157,6 @@ const server=http.createServer(async(req,res)=>{
  assert.deepEqual(await page.evaluate(()=>window.lastStatusJSON),show,'Plugin never overwrites FPP native status JSON');
  radioStatus={active:false};statusDelay=0;const stoppedResponse=page.waitForResponse(response=>response.url().includes('/nowPlaying'));await page.goto('http://127.0.0.1:'+server.address().port+'/fpp-status');await stoppedResponse;
  assert.equal(await page.locator('#ash-status-radio').isVisible(),false,'Stopped radio leaves no status display');
- assert.deepEqual(errors,[]);console.log('PASS UI: stale-cache update regression; preset pages; manual URL Save/Play; everyday Internet-Radio search; Status transport and numbered presets; custom genre search and paging; idle-only Status display; show priority; stale response guard; stopped radio; light/dark desktop/mobile; no browser errors.');
+ assert.deepEqual(errors,[]);console.log('PASS UI: stale-cache update regression; preset pages; manual URL Save/Play; everyday Internet-Radio search; Status transport and numbered presets; custom genre search and paging; silent-sequence coexistence and shared status scenarios; show audio priority; stale response guard; stopped radio; light/dark desktop/mobile; no browser errors.');
  await browser.close();server.close();
 })().catch(e=>{console.error(e);server.close();process.exit(1)});

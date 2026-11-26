@@ -4,7 +4,7 @@
 
 An internet radio for **Falcon Player (FPP) 10.4**. Based on Jason Cross's [fpp-after-hours](https://github.com/jcrossbdn/fpp-after-hours), with a new radio interface, station controls and discovery. Original MIT license and copyright are retained in [LICENSE](LICENSE).
 
-**[Latest release: install and usage instructions](https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio/releases/latest)** · [Version 1.2.2 guide](docs/releases/v1.2.2.md) · [Changes](CHANGELOG.md)
+**[Latest release: install and usage instructions](https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio/releases/latest)** · [Version 1.2.3 guide](docs/releases/v1.2.3.md) · [Changes](CHANGELOG.md)
 
 ## Install in FPP
 
@@ -28,7 +28,7 @@ If the URL field is hidden, switch FPP's UI level to Developer. You can return t
 
 Use **Plugin Manager → Check for Updates → Update** on **After Show Hours Radio**, then refresh the plugin page. Keep the same installation URL. The plugin follows the existing `main` branch without a commit pin.
 
-**Version 1.2.2** fixes the missing Internet-Radio.com search box caused by stale browser assets after updates, and adds a distinct boombox icon. The plugin and Status pages use content-versioned script/style URLs so a normal refresh loads updated controls. The radio page shows **RADIO 1.2.2**. It includes the compact Status controls, manual stream entry and general station/music search introduced in 1.2.
+**Version 1.2.3** allows radio alongside a lights-only `.fseq` sequence. It checks FPP's current media and stream slots instead of treating every playing sequence as a musical show. The radio panel and controls also stay available on Status during a confirmed silent animation, while FPP's native sequence status stays unchanged. The radio page shows **RADIO 1.2.3**. Content-versioned assets continue to load the current UI after a normal refresh.
 
 This update's `fpp_upgrade.sh` runs after FPP pulls the code; it does not restart audio services, restart FPPD, request a reboot, change FPP files, or write your station/preset settings. FPP may display its normal disclosure review for the directory hosts when updating from an older version. No reinstall is needed. Each new version's GitHub release includes the same install link and a step-by-step use guide, published after automated checks pass.
 
@@ -82,7 +82,11 @@ After restarting FPPD once, these commands appear in FPP's command picker:
 
 The page name is matched without regard to capitalization; page IDs are also accepted. A blank page argument uses the selected page. The page name in a schedule must be updated if you rename that page. Commands do not silently stop an active show; explicit scheduled Start/Play Preset commands are trusted so they can run in a playlist's lead-out before FPP becomes idle.
 
-**Protect show**, enabled by default, blocks manual tuning while FPP reports an active show. As a fallback, the once-a-minute monitor also stops radio if a show starts. Use the lead-in Stop command for an immediate stop; the monitor is not a replacement for it. If FPP status cannot be checked, protected manual Play is blocked with an explanation. Stop always remains available.
+**Protect FPP media playback**, enabled by default, allows manual radio Play, Next/Previous, Seek and presets while FPP is idle or running a confirmed lights-only sequence. A sequence playlist entry must have no media; direct and remote `.fseq` playback without media also qualify. Current songs, videos, combined sequence/media entries and foreground/background media slots stay protected even at zero volume. Paused playlists, tests, commands/scripts, playlist transitions and unknown activity are not assumed to be silent sequences. Missing or invalid status blocks protected manual Play.
+
+The once-a-minute monitor uses the same media-aware check: it leaves radio running alongside a silent animation and stops it if FPP begins media playback or status cannot be verified. The existing 15-second starting grace and monitor cadence are unchanged. Use the lead-in **Stop** command for an immediate stop before musical shows; the monitor is a fallback. **Stop** always remains available.
+
+For a static-only playlist, start radio manually while the sequence plays, or put **Start** / **Play Preset** at the beginning of that playlist. An explicit scheduled **Stop** still stops radio regardless of the sequence type. Keep the Stop/Pause lead-in for playlists with music or video.
 
 ## Find stations
 
@@ -118,11 +122,11 @@ Halloweenradio's public station-details layout was checked against the live page
 
 ## Now Playing on FPP Status
 
-While radio is playing and FPP is **idle**, the main **Status - Player Mode** page shows a plugin-owned panel immediately below **Player Status**. It displays **Playing**, the station name, the stream's current artist/title when available, radio volume and bitrate. The panel includes compact **Previous**, **Stop** and **Next** buttons using FPP's native button classes. A named preset-page selector and **1–12** numbered buttons use your existing preset assignments. Empty buttons are disabled, the current station is highlighted, and station names appear in button labels/tooltips. Changing the Status page selector is local to that browser tab; it does not change the plugin's default preset page. A Radio controls link opens the full plugin for editing presets or other settings.
+While radio is playing and FPP is **idle or running a confirmed lights-only sequence**, the main **Status - Player Mode** page shows a plugin-owned panel immediately below **Player Status**. It displays **Playing**, the station name, the stream's current artist/title when available, radio volume and bitrate. The panel includes compact **Previous**, **Stop** and **Next** buttons using FPP's native button classes. A named preset-page selector and **1–12** numbered buttons use your existing preset assignments. Empty buttons are disabled, the current station is highlighted, and station names appear in button labels/tooltips. Changing the Status page selector is local to that browser tab; it does not change the plugin's default preset page. A Radio controls link opens the full plugin for editing presets or other settings.
 
-The panel uses FPP 10.4's existing plugin menu include and `OnSystemStatusChange` callback. It **does not edit FPP core files**, replace FPP's status JSON, change the native player label, or write show/song fields. Both the browser and the read-only summary endpoint check FPP is idle. Controls use the existing radio POST API and its show-protection checks. Stop stays available while another radio control request is pending. A show, paused playlist, test, unknown status or Radio Stop hides the panel. An outstanding response is cancelled/ignored when FPP becomes busy, preventing stale radio titles from appearing over show information.
+The panel uses FPP 10.4's existing plugin menu include and `OnSystemStatusChange` callback. It **does not edit FPP core files**, replace FPP's status JSON, change the native player label, or write show/song fields. The browser and read-only summary endpoint share the same media-aware eligibility rules, checked against common FPP status fixtures. Controls use the existing radio POST API and its show-protection checks. Stop stays available while another radio control request is pending. FPP media playback, a paused playlist, a test, unknown activity or Radio Stop hides the panel. Outstanding responses are cancelled/ignored when FPP starts media, preventing stale radio titles from appearing over song information. Native sequence names and player status remain visible during static animation playback.
 
-Only the Status page loads these assets. The summary sends names of available preset pages and the 12 slots on the selected page, rather than every page's assignments. Local radio summary polling runs at five-second intervals while the panel is playing, fifteen seconds while stopped, and pauses when FPP is busy or the tab is hidden. It never searches directories from the Status page. Live streams without track metadata show their station name and a live-radio label.
+Only the Status page loads these assets. The summary sends names of available preset pages and the 12 slots on the selected page, rather than every page's assignments. Local radio summary polling runs at five-second intervals while the panel is playing, fifteen seconds while stopped, and pauses when FPP owns media or another protected activity is active, or the tab is hidden. It never searches directories from the Status page. Live streams without track metadata show their station name and a live-radio label.
 
 ## FPP 10.4 audio and installation behavior
 
@@ -149,6 +153,8 @@ This release targets **FPP 10.4 only** in its compatibility metadata (through 10
 Run deterministic control tests with PHP CLI, PHP XML/cURL, and Python 3:
 
 ```sh
+php tests/fpp-status.php
+node tests/fpp-status.cjs
 php tests/run.php
 php tests/directories.php
 php tests/real-mpd.php /usr/bin/mpd

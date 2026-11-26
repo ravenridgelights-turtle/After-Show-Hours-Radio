@@ -8,7 +8,7 @@ $ashRadioStyleRef = substr(hash_file('sha256', __DIR__.'/assets/radio-app.css'),
 <script defer src="plugin.php?plugin=After-Show-Hours-Radio&amp;file=assets/radio-app.js&amp;nopage=1&amp;ref=<?= $ashRadioScriptRef ?>"></script>
 <div id="ash-radio" data-api="/api/plugin/After-Show-Hours-Radio/">
   <header class="ash-heading">
-    <div><p class="ash-eyebrow">FPP 10.4 · RADIO 1.2.2</p><h1>After Show Hours <span>Radio</span></h1></div>
+    <div><p class="ash-eyebrow">FPP 10.4 · RADIO 1.2.3</p><h1>After Show Hours <span>Radio</span></h1></div>
     <span class="ash-chip" id="ash-service">Connecting</span>
   </header>
   <div id="ash-notice" role="status" aria-live="polite" hidden></div>
@@ -86,7 +86,7 @@ $ashRadioStyleRef = substr(hash_file('sha256', __DIR__.'/assets/radio-app.css'),
   <section id="ash-tab-settings" class="ash-panel" hidden>
     <div class="ash-settings-grid">
       <div><h2>Radio preferences</h2><form id="ash-settings-form">
-        <label class="ash-check"><input type="checkbox" id="ash-protect" checked> Protect an active FPP show</label><p class="ash-hint">Blocks manual Play and tuning while a show is running. The once-a-minute monitor also stops radio if a show starts. Always use the Stop command in your show's lead-in for an immediate stop.</p>
+        <label class="ash-check"><input type="checkbox" id="ash-protect" checked> Protect FPP media playback</label><p class="ash-hint">Allows radio during a lights-only .fseq with no FPP media. Music, video, active media slots, paused playlists and unverified activity stay protected. The once-a-minute monitor stops radio if media starts; keep the Stop command in a musical show's lead-in for an immediate stop.</p>
         <label class="ash-check"><input type="checkbox" id="ash-recover" checked> Recover stalled streams</label><p class="ash-hint">Checks local player progress about once a minute, then tries one enabled saved station. No directory scans.</p>
         <label>Starting radio volume <input type="number" id="ash-default-volume" min="0" max="100" value="70"> %</label><p class="ash-hint">Applies when starting from Stop. A station's own saved volume takes priority. FPP's show volume is unchanged.</p>
         <button type="submit" class="ash-primary">Save preferences</button>
@@ -95,10 +95,11 @@ $ashRadioStyleRef = substr(hash_file('sha256', __DIR__.'/assets/radio-app.css'),
         <ol><li>After installing, use FPP's <strong>Restart FPPD</strong> banner when your show is idle. This registers the commands. <strong>No controller reboot is needed.</strong></li><li>In your show playlist's <strong>Lead In</strong>, add an <strong>FPP Command → After Show Hours Radio - Stop</strong>.</li><li>Add a <strong>1-second Pause</strong> immediately after Stop.</li><li>In <strong>Lead Out</strong>, add <strong>After Show Hours Radio - Start</strong>, or <strong>Play Preset</strong> with a preset number and page name.</li><li>Schedule the playlist normally. You can also schedule these commands directly in FPP Scheduler.</li></ol>
         <p>Example: <strong>Play Preset → 3 → Christmas</strong> selects preset 3 on your Christmas page, even if you were viewing Halloween.</p>
         <p>Next Station and Previous Station are also available as FPP commands. Explicit FPP Start and Preset commands are allowed during lead-out while FPP still reports a running playlist.</p>
+        <h3>Radio with a static animation</h3><p>Start a lights-only .fseq, then press Play or a preset here. You can also add the radio Start or Play Preset command at the beginning of a static-only playlist. An explicit radio Stop command always stops radio, so keep it for musical shows rather than a static-only playlist.</p>
         <h3>Installing alongside the old plugin</h3><p>Stop the original After Hours plugin and remove its old scheduled Start commands. Its saved internet stations are copied on first install when its settings file is present. Only run one radio at a time.</p>
         <h3>About switching &amp; Seek</h3><p>Station buttons switch the existing player without a separate Stop or an audio-service restart. Internet streams may take a moment to buffer. Seek checks a small audio sample from up to five enabled saved stations, in order; the current audio continues while it checks. Stop cancels the pending Seek.</p>
         <p>Live radio cannot rewind or fast-forward. Seek finds another saved station. Sleep stops within about a minute of the selected time. Playback does not automatically resume after a reboot.</p>
-        <h3>Now Playing on FPP Status</h3><p>The main Status page shows the radio station and current track while radio is playing and FPP is idle. It hides during shows and when radio stops. No FPP core files or native show/song status are changed.</p>
+        <h3>Now Playing on FPP Status</h3><p>The main Status page shows the radio station, current track and compact controls while FPP is idle or playing a confirmed lights-only sequence. Native animation status stays visible. The panel hides during FPP media playback and when radio stops. No FPP core files or native show/song status are changed.</p>
         <h3>Changed your FPP audio output?</h3><p>Reinstall this plugin from Plugin Manager to follow FPP's current PipeWire output. Your settings stay intact during Reinstall.</p>
         <p class="ash-hint">Based on Jason Cross's MIT-licensed fpp-after-hours. This edition targets FPP 10.4. StreamURL availability depends on the site's public pages and request limits.</p>
       </div>

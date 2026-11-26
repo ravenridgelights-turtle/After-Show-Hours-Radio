@@ -15,8 +15,8 @@ final class Radio
     {
         if (!$scheduled && ($this->store->config()['settings']['protectShow'] ?? true)) {
             $busy=call_user_func($this->showCheck);
-            if ($busy === null) throw new \RuntimeException('Cannot check FPP show status. Use the FPP Start command, or turn off Protect show in radio settings.');
-            if ($busy) throw new \RuntimeException('FPP is running a show. Radio playback is protected until the show ends.');
+            if ($busy === null) throw new \RuntimeException('Cannot verify FPP media status. Radio playback is protected until FPP status is available.');
+            if ($busy) throw new \RuntimeException('FPP media playback or another protected activity is active. Radio is allowed during a lights-only sequence with no media.');
         }
     }
     private function find($uid, $config = null)
@@ -274,7 +274,7 @@ final class Radio
         if (!$s['wanted']) return;
         if (!empty($s['sleepUntil']) && time()>=$s['sleepUntil']) { $this->stop(); return; }
         $c=$this->store->config();
-        if (($c['settings']['protectShow'] ?? true) && time()-($s['startedAt'] ?? 0)>15 && call_user_func($this->showCheck)===true) { $this->stop(); return; }
+        if (($c['settings']['protectShow'] ?? true) && time()-($s['startedAt'] ?? 0)>15 && call_user_func($this->showCheck)!==false) { $this->stop(); return; }
         if (!($c['settings']['autoRecover'] ?? true) || time()<($s['retryAfter'] ?? 0)) return;
         $status=$this->mpd->status();
         // Compare elapsed progress, not metadata titles (some stations never change titles).

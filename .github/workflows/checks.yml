@@ -19,6 +19,9 @@ jobs:
           for f in scripts/*.sh commands/*.sh; do bash -n "$f"; done
           node --check assets/radio-app.js
           node --check assets/status.js
+          node --check assets/fpp-status.js
+          php tests/fpp-status.php
+          node tests/fpp-status.cjs
           php tests/run.php
           php tests/directories.php
           php tests/real-mpd.php /usr/bin/mpd

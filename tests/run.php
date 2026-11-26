@@ -11,8 +11,8 @@ function check($condition,$message) { global $count;if (!$condition) throw new R
 function fails($callback,$message) { try{$callback();}catch(Throwable $e){check(true,$message);return;}check(false,$message); }
 try {
  $store=new Store($dir.'/data',$dir.'/run');$store->saveConfig($store->config());$mpd=new Mpd('tcp://127.0.0.1:'.trim(file_get_contents($dir.'/mpd.sock')));
- $busy=false;$probeCount=0;$probe=function($url) use (&$probeCount) {$probeCount++;return true;};
- $radio=new Radio($store,$mpd,function() use (&$busy){return $busy;},function($url) use (&$probe){return $probe($url);});
+ $busy=false;$fppStatus=null;$probeCount=0;$probe=function($url) use (&$probeCount) {$probeCount++;return true;};
+ $radio=new Radio($store,$mpd,function() use (&$busy,&$fppStatus){return $fppStatus===null ? $busy : \AfterShow\FppStatus::audioBusy($fppStatus);},function($url) use (&$probe){return $probe($url);});
  $a=$radio->saveStation(['name'=>'Christmas One','url'=>'https://one.example/live.mp3','volume'=>null]);
  $b=$radio->saveStation(['name'=>'Halloween Two','url'=>'https://two.example/live.aac','volume'=>35]);
  $c=$radio->saveStation(['name'=>'Disabled Three','url'=>'https://three.example/live','enabled'=>false]);
@@ -60,6 +60,21 @@ try {
  $invalid=$backup;$invalid['stations'][]=['name'=>'invalid','url'=>'file:///etc/passwd'];$before=$store->config();
  fails(function() use($radio,$invalid){$radio->import($invalid);},'invalid backup is rejected');check($store->config()===$before,'invalid import leaves settings untouched');
  $radio->play($b['uid']);$s=$store->state();$s['sleepUntil']=time()-1;$store->saveState($s);$radio->monitor();check(!$store->state()['wanted'],'sleep timer stops radio');
+ $fppStatus=['status'=>1,'status_name'=>'playing','current_sequence'=>'christmas static.fseq','current_song'=>'','current_playlist'=>['playlist'=>'Static','type'=>'sequence'],'media_playing'=>false,'streamSlots'=>[['slot'=>1,'status'=>'idle','mediaFilename'=>'']]];
+ $radio->play($b['uid']);$radio->move(1);$radio->preset(7,false,'Halloween');
+ check($store->state()['wanted'] && $mpd->status()['player']['state']==='play','Play, Next and presets allow radio during a lights-only fseq');
+ check($radio->nowPlaying()['active'],'Status summary remains visible alongside a lights-only fseq');
+ $s=$store->state();$s['startedAt']=time()-20;$store->saveState($s);$radio->monitor();
+ check($store->state()['wanted'],'monitor keeps radio playing during a silent animation');
+ $fppStatus['current_song']='Show song.mp3';$fppStatus['current_playlist']['type']='both';
+ fails(function() use($radio){$radio->play();},'musical sequence still blocks manual Play');
+ fails(function() use($radio){$radio->move(1);},'musical sequence still blocks station changes');
+ check(!$radio->nowPlaying()['active'],'media start hides radio summary without changing show status');
+ $radio->monitor();check(!$store->state()['wanted'] && $mpd->status()['player']['state']==='stop','monitor stops radio when a silent sequence gains media');
+ $fppStatus['current_song']='';$fppStatus['current_playlist']['type']='sequence';$radio->play();
+ $s=$store->state();$s['startedAt']=time()-20;$store->saveState($s);$fppStatus=[];$radio->monitor();
+ check(!$store->state()['wanted'],'monitor stops protected radio when FPP status cannot be verified');
+ $fppStatus=null;
  check(!Store::validUrl("https://example.org/\nstop") && !Store::validUrl('https://user:pass@example.org/audio'),'URL credentials and command injection refused');
  $html=file_get_contents(__DIR__.'/fixtures/halloween.html');$parsed=Catalog::parse($html,'https://halloweenradio.net/stations','halloweenradio');
  check(count($parsed['stations'])===4 && $parsed['stations'][0]['name']==='Halloweenradio Main · MP3','Halloween station names and formats extracted');

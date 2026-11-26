@@ -1,5 +1,13 @@
 # Changes
 
+## 1.2.3 — November 25, 2026
+
+- Allow radio Play, presets, Next/Previous and Seek while FPP runs a lights-only .fseq with no media. Shared status checks distinguish sequence-only playback from musical shows, media entries and active foreground/background stream slots.
+- Keep the radio panel and compact controls visible on FPP Status alongside a confirmed silent animation without changing native sequence/song/player status. Media starts and late responses still hide the radio panel.
+- Use the same media-aware protection in the automatic monitor. Silent animations no longer stop radio; protected radio stops on a monitor check if media starts or status cannot be verified. Existing monitor cadence and starting grace are unchanged.
+- Add common PHP/JavaScript status scenarios, silent-sequence control/monitor regressions and browser checks. Updated install/use guide includes static-only playlist scheduling.
+- Same FPP Update link, no new endpoints, no FPP core edits, no settings migration and no reboot or service restart.
+
 ## 1.2.2 — November 16, 2026
 
 - Replaced the local `icon.png` as well as the metadata icon. FPP 10.4 gives the local file priority for installed plugins, so the new boombox now appears on the installed card and plugin page.
