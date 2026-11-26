@@ -2,7 +2,7 @@
   "repoName": "After-Show-Hours-Radio",
   "name": "After Show Hours Radio",
   "author": "ravenridgelights-turtle; based on Jason Cross (jcross)",
-  "description": "Internet radio for FPP 10.4: play alongside lights-only sequences while protecting FPP media. Compact Status controls, named preset pages, manual stream URLs and general music searches.",
+  "description": "Internet radio for FPP 10.4: plays alongside lights-only sequences and automatically stops before playlist music/video. Compact Status controls, named preset pages and station discovery.",
   "homeURL": "https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio",
   "srcURL": "https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio.git",
   "bugURL": "https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio/issues",
@@ -83,6 +83,6 @@
       }
     ],
     "closedCode": false,
-    "other": "Stations and named preset pages are saved locally under plugindata/After-Show-Hours-Radio. The radio API uses FPP access controls; it adds no public listener. Saved streams may use HTTP. Directory providers and radio stations see your IP and normal request information. Real uninstall removes this plugin data; export a backup first. Reinstall retains settings. No reboot or FPP audio-stack restart is requested. The plugin adds a radio panel while idle or playing a confirmed lights-only sequence to FPP Status through its menu hook; it does not edit FPP files or replace show status. Radio Browser search text goes only to its API. Version 1.2 updates preserve settings and do not restart audio services or FPPD."
+    "other": "Stations and named preset pages are saved locally under plugindata/After-Show-Hours-Radio. The radio API uses FPP access controls; it adds no public listener. Saved streams may use HTTP. Directory providers and radio stations see your IP and normal request information. Real uninstall removes this plugin data; export a backup first. Reinstall retains settings. No reboot or FPP audio-stack restart is requested. The plugin adds a radio panel while idle or playing a confirmed lights-only sequence to FPP Status through its menu hook; it does not edit FPP files or replace show status. Radio Browser search text goes only to its API. Version 1.2 updates preserve settings and do not restart audio services or FPPD. FPP media-open callbacks stop protected radio before playlist audio starts. The callback makes no external requests, adds no background polling and edits no FPP files."
   }
 }

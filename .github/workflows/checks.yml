@@ -23,6 +23,7 @@ jobs:
           php tests/fpp-status.php
           node tests/fpp-status.cjs
           php tests/run.php
+          php tests/media-callback.php
           php tests/directories.php
           php tests/real-mpd.php /usr/bin/mpd
           python3 -m json.tool pluginInfo.json >/dev/null

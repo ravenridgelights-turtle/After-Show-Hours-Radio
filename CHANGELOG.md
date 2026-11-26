@@ -1,5 +1,12 @@
 # Changes
 
+## 1.2.4 — November 25, 2026
+
+- Fix the automatic radio-to-show handoff by registering FPP's native media callback. Nonempty media-open notifications stop protected radio before normal playlist music/video opens, independently of browser visibility, the once-a-minute monitor and its startup grace.
+- Invalidate radio intent and pending Seek/recovery under the player lock before MPD Stop. Ignore media-close notifications and leave silent sequences alone. Explicitly disabled protection is respected.
+- Keep the callback small, local and event-driven, with bounded MPD timeouts. FPP 10.4 Plugin Manager loads it through its normal post-Update reload; no FPP core edits, new daemon, new polling loop, audio-service restart or controller reboot.
+- Add regression tests for immediate show starts, browser-independent handoff, Seek cancellation, callback discovery and a real MPD Stop.
+
 ## 1.2.3 — November 25, 2026
 
 - Allow radio Play, presets, Next/Previous and Seek while FPP runs a lights-only .fseq with no media. Shared status checks distinguish sequence-only playback from musical shows, media entries and active foreground/background stream slots.

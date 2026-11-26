@@ -8,7 +8,7 @@ $ashRadioStyleRef = substr(hash_file('sha256', __DIR__.'/assets/radio-app.css'),
 <script defer src="plugin.php?plugin=After-Show-Hours-Radio&amp;file=assets/radio-app.js&amp;nopage=1&amp;ref=<?= $ashRadioScriptRef ?>"></script>
 <div id="ash-radio" data-api="/api/plugin/After-Show-Hours-Radio/">
   <header class="ash-heading">
-    <div><p class="ash-eyebrow">FPP 10.4 · RADIO 1.2.3</p><h1>After Show Hours <span>Radio</span></h1></div>
+    <div><p class="ash-eyebrow">FPP 10.4 · RADIO 1.2.4</p><h1>After Show Hours <span>Radio</span></h1></div>
     <span class="ash-chip" id="ash-service">Connecting</span>
   </header>
   <div id="ash-notice" role="status" aria-live="polite" hidden></div>
@@ -86,7 +86,7 @@ $ashRadioStyleRef = substr(hash_file('sha256', __DIR__.'/assets/radio-app.css'),
   <section id="ash-tab-settings" class="ash-panel" hidden>
     <div class="ash-settings-grid">
       <div><h2>Radio preferences</h2><form id="ash-settings-form">
-        <label class="ash-check"><input type="checkbox" id="ash-protect" checked> Protect FPP media playback</label><p class="ash-hint">Allows radio during a lights-only .fseq with no FPP media. Music, video, active media slots, paused playlists and unverified activity stay protected. The once-a-minute monitor stops radio if media starts; keep the Stop command in a musical show's lead-in for an immediate stop.</p>
+        <label class="ash-check"><input type="checkbox" id="ash-protect" checked> Protect FPP media playback</label><p class="ash-hint">Allows radio during a lights-only .fseq with no FPP media. Music, video, active media slots, paused playlists and unverified activity stay protected. FPP's media-open callback stops radio before playlist music/video starts, even with no browser open. The once-a-minute monitor remains a fallback. Your scheduled Stop commands still work.</p>
         <label class="ash-check"><input type="checkbox" id="ash-recover" checked> Recover stalled streams</label><p class="ash-hint">Checks local player progress about once a minute, then tries one enabled saved station. No directory scans.</p>
         <label>Starting radio volume <input type="number" id="ash-default-volume" min="0" max="100" value="70"> %</label><p class="ash-hint">Applies when starting from Stop. A station's own saved volume takes priority. FPP's show volume is unchanged.</p>
         <button type="submit" class="ash-primary">Save preferences</button>

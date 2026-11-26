@@ -81,13 +81,26 @@ final class Radio
     }
     public function stop()
     {
-        return $this->store->lock('player', function() {
-            $state=$this->store->state(); $state['wanted']=false; $state['generation']++; unset($state['sleepUntil']);
-            // Invalidate a seek/recovery BEFORE contacting the audio service.
-            $this->store->saveState($state);
-            $this->mpd->command('stop');
-            return ['message'=>'Radio stopped'];
-        });
+        return $this->store->lock('player', function() { return $this->stopLocked(); });
+    }
+    private function stopLocked()
+    {
+        $state=$this->store->state(); $state['wanted']=false; $state['generation']++; unset($state['sleepUntil']);
+        // Invalidate a seek/recovery BEFORE contacting the audio service.
+        $this->store->saveState($state);
+        $this->mpd->command('stop');
+        return ['message'=>'Radio stopped'];
+    }
+    public function stopForMedia()
+    {
+        // The callback is already positive evidence of FPP opening media.
+        // Do not apply the monitor's startup grace or query FPP from here.
+        if (!($this->store->config()['settings']['protectShow'] ?? true) || !$this->store->state()['wanted']) return false;
+        return $this->store->lock('player',function() {
+            if (!($this->store->config()['settings']['protectShow'] ?? true) || !$this->store->state()['wanted']) return false;
+            $this->stopLocked();
+            return true;
+        },1.2);
     }
     public function move($direction, $seek = false, $scheduled = false)
     {

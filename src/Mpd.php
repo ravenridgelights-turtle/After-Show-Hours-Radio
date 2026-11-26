@@ -5,12 +5,17 @@ namespace AfterShow;
 final class Mpd
 {
     private $socket;
-    public function __construct($address = 'unix:///run/after-show-hours-radio/mpd.sock') { $this->socket = $address; }
+    private $timeout;
+    public function __construct($address = 'unix:///run/after-show-hours-radio/mpd.sock', $timeout = 2.0)
+    {
+        $this->socket=$address; $this->timeout=max(0.05,min(2.0,(float)$timeout));
+    }
     public function commands(array $commands)
     {
-        $fp = @stream_socket_client($this->socket, $errno, $errstr, 0.7);
+        $fp = @stream_socket_client($this->socket, $errno, $errstr, min(0.7,$this->timeout));
         if (!$fp) throw new \RuntimeException('Radio audio service is unavailable. Reinstall the plugin or check its log.');
-        stream_set_timeout($fp, 2);
+        $seconds=(int)$this->timeout;
+        stream_set_timeout($fp,$seconds,(int)round(($this->timeout-$seconds)*1000000));
         try {
             $greeting = fgets($fp, 4096);
             if (!$greeting || strpos($greeting, 'OK MPD ') !== 0) throw new \RuntimeException('Invalid audio service response.');

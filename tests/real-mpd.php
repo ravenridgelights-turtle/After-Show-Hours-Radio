@@ -3,6 +3,7 @@
 // The null output replaces only the hardware-dependent Pulse output.
 require_once __DIR__.'/../src/bootstrap.php';
 require_once __DIR__.'/../src/AudioConfig.php';
+require_once __DIR__.'/../src/MediaCallback.php';
 use AfterShow\{Store,Mpd,Radio,AudioConfig};
 $binary=$argv[1] ?? '/usr/bin/mpd';$tcp=in_array('--tcp',$argv,true);
 $dir=sys_get_temp_dir().'/ash-mpd-'.bin2hex(random_bytes(4));mkdir($dir);mkdir($dir.'/music');mkdir($dir.'/playlists');
@@ -40,5 +41,9 @@ try {
  $radio->savePreset(4,$a['uid'],'Christmas');$radio->preset(4,true,'Christmas');usleep(100000);
  if($client->status()['song']['file']!==$a['url'])throw new RuntimeException('Native preset playback failed.');
  $radio->stop();if($client->status()['player']['state']!=='stop')throw new RuntimeException('Native Stop failed.');
- echo "PASS real MPD: shipped config parses, ".($tcp?'TCP test transport':'production Unix-socket transport').", HTTP audio playback, Next switching, one queue entry, station volume, named preset, Stop.\n";
+ $radio->play($a['uid'],true);
+ $event=['callbacks.php','--type','media','--data',json_encode(['type'=>'both','Sequence'=>'show.fseq','Media'=>'show.mp3'])];
+ \AfterShow\MediaCallback::dispatch($event,function()use($radio){return $radio->stopForMedia();});
+ if($store->state()['wanted'] || $client->status()['player']['state']!=='stop')throw new RuntimeException('Real MPD media-start handoff failed.');
+ echo "PASS real MPD: shipped config parses, ".($tcp?'TCP test transport':'production Unix-socket transport').", HTTP audio playback, Next switching, one queue entry, station volume, named preset, Stop, native media-callback handoff without a monitor tick.\n";
 } finally {if(is_resource($mpd)){proc_terminate($mpd);proc_close($mpd);}if(is_resource($http)){proc_terminate($http);proc_close($http);}}

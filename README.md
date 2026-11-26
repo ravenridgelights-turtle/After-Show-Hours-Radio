@@ -4,7 +4,7 @@
 
 An internet radio for **Falcon Player (FPP) 10.4**. Based on Jason Cross's [fpp-after-hours](https://github.com/jcrossbdn/fpp-after-hours), with a new radio interface, station controls and discovery. Original MIT license and copyright are retained in [LICENSE](LICENSE).
 
-**[Latest release: install and usage instructions](https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio/releases/latest)** · [Version 1.2.3 guide](docs/releases/v1.2.3.md) · [Changes](CHANGELOG.md)
+**[Latest release: install and usage instructions](https://github.com/ravenridgelights-turtle/After-Show-Hours-Radio/releases/latest)** · [Version 1.2.4 guide](docs/releases/v1.2.4.md) · [Changes](CHANGELOG.md)
 
 ## Install in FPP
 
@@ -28,7 +28,7 @@ If the URL field is hidden, switch FPP's UI level to Developer. You can return t
 
 Use **Plugin Manager → Check for Updates → Update** on **After Show Hours Radio**, then refresh the plugin page. Keep the same installation URL. The plugin follows the existing `main` branch without a commit pin.
 
-**Version 1.2.3** allows radio alongside a lights-only `.fseq` sequence. It checks FPP's current media and stream slots instead of treating every playing sequence as a musical show. The radio panel and controls also stay available on Status during a confirmed silent animation, while FPP's native sequence status stays unchanged. The radio page shows **RADIO 1.2.3**. Content-versioned assets continue to load the current UI after a normal refresh.
+**Version 1.2.4** fixes the automatic handoff from radio/static animation to a musical show. FPP's native media-open callback stops protected radio before playlist music/video opens, without waiting for a monitor tick, startup grace or browser. Silent `.fseq` playback remains allowed. The radio page shows **RADIO 1.2.4**. FPP 10.4 Plugin Manager loads the callback as it reloads the updated plugin; the normal Update requires no reboot or FPPD restart.
 
 This update's `fpp_upgrade.sh` runs after FPP pulls the code; it does not restart audio services, restart FPPD, request a reboot, change FPP files, or write your station/preset settings. FPP may display its normal disclosure review for the directory hosts when updating from an older version. No reinstall is needed. Each new version's GitHub release includes the same install link and a step-by-step use guide, published after automated checks pass.
 
@@ -84,7 +84,11 @@ The page name is matched without regard to capitalization; page IDs are also acc
 
 **Protect FPP media playback**, enabled by default, allows manual radio Play, Next/Previous, Seek and presets while FPP is idle or running a confirmed lights-only sequence. A sequence playlist entry must have no media; direct and remote `.fseq` playback without media also qualify. Current songs, videos, combined sequence/media entries and foreground/background media slots stay protected even at zero volume. Paused playlists, tests, commands/scripts, playlist transitions and unknown activity are not assumed to be silent sequences. Missing or invalid status blocks protected manual Play.
 
-The once-a-minute monitor uses the same media-aware check: it leaves radio running alongside a silent animation and stops it if FPP begins media playback or status cannot be verified. The existing 15-second starting grace and monitor cadence are unchanged. Use the lead-in **Stop** command for an immediate stop before musical shows; the monitor is a fallback. **Stop** always remains available.
+**Automatic show handoff:** FPP calls the plugin's `callbacks.php --type media --data ...` before opening normal playlist music/video and remote media. A nonempty `Media` field stops protected radio immediately on that callback, including during the monitor's original 15-second starting grace. The callback takes a player lock, clears the wanted state and increments its generation before stopping MPD, so pending Seek/recovery cannot restart it. It never fetches FPP status while the FPP playlist thread waits for it. Empty media-close notifications and lights-only sequences are ignored. Disabling **Protect FPP media playback** deliberately disables this automatic handoff too.
+
+The once-a-minute monitor remains a fallback for media paths that do not emit FPP's native callback (including independently started background command streams), sleep and stalled-stream recovery. Its existing cadence and starting grace are unchanged. An explicit lead-in **Stop** remains available for a handoff before any kind of show command; it is no longer required to trigger the normal playlist audio handoff. Radio does not automatically resume after the callback stops it; use the scheduled **Start** or **Play Preset** in Lead Out.
+
+The callback runs only on FPP media notifications, not on a polling loop. It exits without contacting MPD when radio is already off or protection is disabled. Its local MPD connection/read budgets are shortened to 0.4 seconds and its player-lock wait is capped at 1.2 seconds, keeping a failed radio service from holding up FPP's media-open path indefinitely. No new daemon or external network requests are added.
 
 For a static-only playlist, start radio manually while the sequence plays, or put **Start** / **Play Preset** at the beginning of that playlist. An explicit scheduled **Stop** still stops radio regardless of the sequence type. Keep the Stop/Pause lead-in for playlists with music or video.
 
@@ -156,6 +160,7 @@ Run deterministic control tests with PHP CLI, PHP XML/cURL, and Python 3:
 php tests/fpp-status.php
 node tests/fpp-status.cjs
 php tests/run.php
+php tests/media-callback.php
 php tests/directories.php
 php tests/real-mpd.php /usr/bin/mpd
 ```
